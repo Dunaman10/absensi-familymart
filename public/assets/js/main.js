@@ -237,4 +237,71 @@
       mediaQuery.addListener(handleBreakpointChange);
     }
   });
+
+  // Global Helper Function to Toggle Password Visibility (Eye Reveal)
+  window.togglePasswordVisibility = function (inputId, iconId) {
+    var input = document.getElementById(inputId);
+    var icon = document.getElementById(iconId);
+    if (!input) return;
+
+    if (input.type === "password") {
+      input.type = "text";
+      if (icon) {
+        icon.classList.remove("bi-eye");
+        icon.classList.add("bi-eye-slash");
+      }
+    } else {
+      input.type = "password";
+      if (icon) {
+        icon.classList.remove("bi-eye-slash");
+        icon.classList.add("bi-eye");
+      }
+    }
+  };
+
+  // Notification Badge Mark As Read Handler
+  document.addEventListener("DOMContentLoaded", function () {
+    var notifBtns = document.querySelectorAll(".dropdown-notif-btn");
+
+    if (sessionStorage.getItem("notif_read") === "true") {
+      document.querySelectorAll(".notification-dot").forEach(function (dot) {
+        dot.style.display = "none";
+      });
+    }
+
+    notifBtns.forEach(function (btn) {
+      function markRead() {
+        var dots = btn.querySelectorAll(".notification-dot");
+        dots.forEach(function (dot) {
+          dot.style.display = "none";
+        });
+        sessionStorage.setItem("notif_read", "true");
+      }
+
+      btn.addEventListener("click", markRead);
+      btn.addEventListener("show.bs.dropdown", markRead);
+    });
+
+    // Real-time Client-side Table Filter for .table-search
+    var tableSearchInputs = document.querySelectorAll(".table-search");
+    tableSearchInputs.forEach(function (input) {
+      input.addEventListener("input", function () {
+        var query = this.value.toLowerCase().trim();
+        var panel = this.closest(".panel") || document;
+        var rows = panel.querySelectorAll("tbody tr");
+
+        rows.forEach(function (row) {
+          var text = row.textContent.toLowerCase();
+          if (text.includes(query)) {
+            row.style.display = "";
+          } else {
+            row.style.display = "none";
+          }
+        });
+      });
+    });
+  });
 })();
+
+
+

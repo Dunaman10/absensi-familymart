@@ -22,19 +22,24 @@ class LoginController extends Controller
     public function login(Request $request)
     {
         $credentials = $request->validate([
-            'email' => ['required', 'email'],
+            'nip' => ['required', 'string'],
             'password' => ['required'],
         ]);
 
         if (Auth::attempt($credentials, $request->boolean('remember'))) {
             $request->session()->regenerate();
 
-            return redirect()->intended('/dashboard');
+            $user = Auth::user();
+            if ($user->role === 'admin') {
+                return redirect()->intended('/admin/dashboard');
+            }
+
+            return redirect()->intended('/employee/dashboard');
         }
 
         return back()->withErrors([
-            'email' => 'Kredensial yang dimasukkan tidak cocok dengan data kami.',
-        ])->onlyInput('email');
+            'nip' => 'NIP atau password yang dimasukkan tidak cocok dengan data kami.',
+        ])->onlyInput('nip');
     }
 
     /**

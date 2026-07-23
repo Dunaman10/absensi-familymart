@@ -13,16 +13,21 @@ return new class extends Migration
     {
         Schema::create('users', function (Blueprint $table) {
             $table->id();
+            $table->string('nip', 50)->unique()->comment('Digunakan untuk Login');
             $table->string('name');
-            $table->string('email')->unique();
-            $table->timestamp('email_verified_at')->nullable();
+            $table->string('position')->nullable()->comment('Jabatan / Tim Karyawan');
             $table->string('password');
+            $table->enum('role', ['admin', 'user'])->default('user');
+            $table->enum('account_status', ['Aktif', 'Non-Aktif', 'Pending Biometrik'])->default('Pending Biometrik');
+            $table->text('face_descriptor')->nullable()->comment('Data Float32Array (JSON) dari face-api.js');
+            $table->string('registered_face_photo')->nullable()->comment('Path foto wajah acuan saat registrasi');
             $table->rememberToken();
             $table->timestamps();
+            $table->softDeletes();
         });
 
         Schema::create('password_reset_tokens', function (Blueprint $table) {
-            $table->string('email')->primary();
+            $table->string('nip')->primary();
             $table->string('token');
             $table->timestamp('created_at')->nullable();
         });

@@ -36,10 +36,29 @@
               </div>
             </div>
             <div class="heading-actions">
-              <button class="btn btn-outline-secondary btn-sm" type="button"><i class="bi bi-download" aria-hidden="true"></i> Export</button>
-              <button class="btn btn-primary btn-sm" type="button" data-bs-toggle="modal" data-bs-target="#employeeModal"><i class="bi bi-person-plus" aria-hidden="true"></i> Tambah Karyawan</button>
+              <a class="btn btn-outline-secondary btn-sm" href="{{ route('admin.employees.export', ['search' => request('search')]) }}"><i class="bi bi-file-earmark-excel me-1" aria-hidden="true"></i> Export Excel</a>
+              <button class="btn btn-primary btn-sm" type="button" data-bs-toggle="modal" data-bs-target="#employeeModal"><i class="bi bi-person-plus me-1" aria-hidden="true"></i> Tambah Karyawan</button>
             </div>
           </div>
+
+          @if(session('success'))
+          <div class="alert alert-success alert-dismissible fade show mt-3" role="alert">
+            <i class="bi bi-check-circle-fill me-2"></i>{{ session('success') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+          </div>
+          @endif
+
+          @if($errors->any())
+          <div class="alert alert-danger alert-dismissible fade show mt-3" role="alert">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>Terdapat kesalahan pada input form:
+            <ul class="mb-0 mt-1 small">
+              @foreach($errors->all() as $error)
+                <li>{{ $error }}</li>
+              @endforeach
+            </ul>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+          </div>
+          @endif
 
           <!-- Metrik Cards Data Karyawan -->
           <section class="row g-3 mt-1" aria-label="Employee metrics summary">
@@ -49,10 +68,10 @@
                   <span class="metric-label">TOTAL KARYAWAN</span>
                   <span class="metric-icon"><i class="bi bi-people" aria-hidden="true"></i></span>
                 </div>
-                <div class="metric-value">128</div>
+                <div class="metric-value">{{ $totalEmployees }}</div>
                 <div class="metric-meta">
-                  <span class="text-success">+5.1%</span>
-                  <span>bulan ini</span>
+                  <span class="text-success">Terdaftar</span>
+                  <span>di database</span>
                 </div>
               </article>
             </div>
@@ -61,12 +80,11 @@
               <article class="metric-card metric-success">
                 <div class="metric-top">
                   <span class="metric-label">AKUN AKTIF</span>
-                  <span class="metric-icon"><i class="bi bi-check2-circle" aria-hidden="true"></i></span>
+                  <span class="metric-icon"><i class="bi bi-person-check" aria-hidden="true"></i></span>
                 </div>
-                <div class="metric-value">120</div>
+                <div class="metric-value">{{ $activeEmployees }}</div>
                 <div class="metric-meta">
-                  <span class="text-success">94%</span>
-                  <span>akun terverifikasi</span>
+                  <span class="text-success">Siap Absen</span>
                 </div>
               </article>
             </div>
@@ -75,12 +93,11 @@
               <article class="metric-card metric-warning">
                 <div class="metric-top">
                   <span class="metric-label">PENDING BIOMETRIK</span>
-                  <span class="metric-icon"><i class="bi bi-hourglass-split" aria-hidden="true"></i></span>
+                  <span class="metric-icon"><i class="bi bi-person-exclamation" aria-hidden="true"></i></span>
                 </div>
-                <div class="metric-value">5</div>
+                <div class="metric-value">{{ $pendingBiometric }}</div>
                 <div class="metric-meta">
-                  <span class="text-warning">5 orang</span>
-                  <span>belum foto wajah</span>
+                  <span class="text-warning">Belum mendaftarkan foto</span>
                 </div>
               </article>
             </div>
@@ -89,129 +106,88 @@
               <article class="metric-card metric-danger">
                 <div class="metric-top">
                   <span class="metric-label">NON-AKTIF</span>
-                  <span class="metric-icon"><i class="bi bi-slash-circle" aria-hidden="true"></i></span>
+                  <span class="metric-icon"><i class="bi bi-person-x" aria-hidden="true"></i></span>
                 </div>
-                <div class="metric-value">3</div>
+                <div class="metric-value">{{ $inactiveEmployees }}</div>
                 <div class="metric-meta">
-                  <span class="text-danger">3 akun</span>
-                  <span>ditangguhkan</span>
+                  <span class="text-danger">Akun ditangguhkan</span>
                 </div>
               </article>
             </div>
           </section>
 
-          <!-- Table Karyawan (CRUD Interface) -->
+          <!-- Panels Table Karyawan -->
           <section class="panel mt-3">
-            <div class="panel-header">
+            <div class="panel-header flex-wrap gap-2">
               <div>
-                <h2 class="h5 mb-1 section-title"><i class="bi bi-table" aria-hidden="true"></i><span>Daftar Karyawan</span></h2>
-                <p class="text-muted mb-0">Cari, kelola, serta perbarui data akun dan akses karyawan.</p>
+                <h2 class="h5 mb-1 section-title"><i class="bi bi-person-lines-fill" aria-hidden="true"></i><span>Daftar Karyawan</span></h2>
+                <p class="text-muted mb-0">Master data akun karyawan terdaftar di sistem HRIS.</p>
               </div>
-              <div class="d-flex flex-wrap gap-2">
-                <input class="form-control form-control-sm table-search" type="search" placeholder="Cari karyawan..." aria-label="Search employees">
-              </div>
+              <form action="{{ route('admin.employees.index') }}" method="GET" class="d-flex flex-wrap gap-2">
+                <div class="input-group input-group-sm">
+                  <input class="form-control table-search" type="search" name="search" value="{{ request('search') }}" placeholder="Cari karyawan" aria-label="Search employees" id="employeeSearchInput">
+                  <button class="btn btn-outline-secondary" type="submit"><i class="bi bi-search"></i></button>
+                  @if(request('search'))
+                    <a href="{{ route('admin.employees.index') }}" class="btn btn-outline-secondary text-muted" title="Reset"><i class="bi bi-x-lg"></i></a>
+                  @endif
+                </div>
+              </form>
             </div>
             <div class="table-responsive">
               <table class="table align-middle mb-0">
                 <thead>
                   <tr>
-                    <th scope="col">Karyawan</th>
-                    <th scope="col">NIP</th>
+                    <th scope="col">Nama Karyawan</th>
+                    <th scope="col">NIP (Username)</th>
                     <th scope="col">Jabatan / Tim</th>
-                    <th scope="col">Role</th>
+                    <th scope="col">Role Akses</th>
                     <th scope="col">Status Akun</th>
-                    <th scope="col" class="text-end">Aksi (CRUD)</th>
+                    <th scope="col" class="text-end">Aksi</th>
                   </tr>
                 </thead>
                 <tbody>
+                  @forelse($employees as $emp)
                   <tr>
                     <td>
                       <div class="d-flex align-items-center gap-2">
-                        <img class="avatar-img avatar-sm" src="{{ asset('assets/images/avatar/avatar-1.jpg') }}" alt="Budi Santoso">
+                        <img class="avatar-img avatar-sm" src="{{ $emp->registered_face_photo ? asset($emp->registered_face_photo) : asset('assets/images/avatar/avatar.jpg') }}" alt="{{ $emp->name }}">
                         <div>
-                          <p class="fw-semibold mb-0">Budi Santoso</p>
-                          <p class="text-muted small mb-0">budi.santoso@absensiku.com</p>
+                          <p class="fw-semibold mb-0">{{ $emp->name }}</p>
+                          <small class="text-muted">NIP. {{ $emp->nip }}</small>
                         </div>
                       </div>
                     </td>
-                    <td><span class="fw-mono text-muted">NIP-19920101</span></td>
-                    <td>Operations Specialist</td>
-                    <td><span class="badge text-bg-secondary">User</span></td>
-                    <td><span class="badge text-bg-success">Aktif</span></td>
-                    <td class="text-end">
-                      <div class="btn-group btn-group-sm">
-                        <button class="btn btn-light btn-sm" title="Detail"><i class="bi bi-eye"></i></button>
-                        <button class="btn btn-light btn-sm text-primary" title="Edit"><i class="bi bi-pencil"></i></button>
-                        <button class="btn btn-light btn-sm text-danger" title="Hapus"><i class="bi bi-trash"></i></button>
-                      </div>
-                    </td>
-                  </tr>
-                  <tr>
+                    <td><span class="fw-mono text-muted">{{ $emp->nip }}</span></td>
+                    <td>{{ $emp->position ?? '-' }}</td>
                     <td>
-                      <div class="d-flex align-items-center gap-2">
-                        <img class="avatar-img avatar-sm" src="{{ asset('assets/images/avatar/avatar-2.jpg') }}" alt="Siti Rahma">
-                        <div>
-                          <p class="fw-semibold mb-0">Siti Rahma</p>
-                          <p class="text-muted small mb-0">siti.rahma@absensiku.com</p>
-                        </div>
-                      </div>
+                      @if($emp->role == 'admin')
+                        <span class="badge text-bg-info">Admin HR</span>
+                      @else
+                        <span class="badge text-bg-secondary">Karyawan</span>
+                      @endif
                     </td>
-                    <td><span class="fw-mono text-muted">NIP-19930412</span></td>
-                    <td>HR & Finance Officer</td>
-                    <td><span class="badge text-bg-info">Admin HR</span></td>
-                    <td><span class="badge text-bg-success">Aktif</span></td>
-                    <td class="text-end">
-                      <div class="btn-group btn-group-sm">
-                        <button class="btn btn-light btn-sm" title="Detail"><i class="bi bi-eye"></i></button>
-                        <button class="btn btn-light btn-sm text-primary" title="Edit"><i class="bi bi-pencil"></i></button>
-                        <button class="btn btn-light btn-sm text-danger" title="Hapus"><i class="bi bi-trash"></i></button>
-                      </div>
-                    </td>
-                  </tr>
-                  <tr>
                     <td>
-                      <div class="d-flex align-items-center gap-2">
-                        <img class="avatar-img avatar-sm" src="{{ asset('assets/images/avatar/avatar-3.jpg') }}" alt="Ahmad Hidayat">
-                        <div>
-                          <p class="fw-semibold mb-0">Ahmad Hidayat</p>
-                          <p class="text-muted small mb-0">ahmad.hidayat@absensiku.com</p>
-                        </div>
-                      </div>
+                      @if($emp->account_status == 'Aktif')
+                        <span class="badge text-bg-success">Aktif</span>
+                      @elseif($emp->account_status == 'Pending Biometrik')
+                        <span class="badge text-bg-warning text-dark">Pending Biometrik</span>
+                      @else
+                        <span class="badge text-bg-danger">Non-Aktif</span>
+                      @endif
                     </td>
-                    <td><span class="fw-mono text-muted">NIP-19900823</span></td>
-                    <td>Lead IT Engineer</td>
-                    <td><span class="badge text-bg-secondary">User</span></td>
-                    <td><span class="badge text-bg-warning">Pending Biometrik</span></td>
                     <td class="text-end">
-                      <div class="btn-group btn-group-sm">
-                        <button class="btn btn-light btn-sm" title="Detail"><i class="bi bi-eye"></i></button>
-                        <button class="btn btn-light btn-sm text-primary" title="Edit"><i class="bi bi-pencil"></i></button>
-                        <button class="btn btn-light btn-sm text-danger" title="Hapus"><i class="bi bi-trash"></i></button>
-                      </div>
+                      <form action="{{ route('admin.employees.destroy', $emp->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Apakah Anda yakin ingin menghapus karyawan {{ $emp->name }}?');">
+                        @csrf
+                        @method('DELETE')
+                        <button type="submit" class="btn btn-light btn-sm text-danger" title="Hapus Karyawan"><i class="bi bi-trash"></i></button>
+                      </form>
                     </td>
                   </tr>
+                  @empty
                   <tr>
-                    <td>
-                      <div class="d-flex align-items-center gap-2">
-                        <img class="avatar-img avatar-sm" src="{{ asset('assets/images/avatar/avatar.jpg') }}" alt="Nadia Islam">
-                        <div>
-                          <p class="fw-semibold mb-0">Nadia Islam</p>
-                          <p class="text-muted small mb-0">nadia@absensiku.com</p>
-                        </div>
-                      </div>
-                    </td>
-                    <td><span class="fw-mono text-muted">NIP-19950711</span></td>
-                    <td>Marketing Lead</td>
-                    <td><span class="badge text-bg-secondary">User</span></td>
-                    <td><span class="badge text-bg-danger">Non-Aktif</span></td>
-                    <td class="text-end">
-                      <div class="btn-group btn-group-sm">
-                        <button class="btn btn-light btn-sm" title="Detail"><i class="bi bi-eye"></i></button>
-                        <button class="btn btn-light btn-sm text-primary" title="Edit"><i class="bi bi-pencil"></i></button>
-                        <button class="btn btn-light btn-sm text-danger" title="Hapus"><i class="bi bi-trash"></i></button>
-                      </div>
-                    </td>
+                    <td colspan="6" class="text-center text-muted py-4">Belum ada data karyawan terdaftar.</td>
                   </tr>
+                  @endforelse
                 </tbody>
               </table>
             </div>
@@ -221,55 +197,59 @@
     </div>
   </div>
 
-  <!-- Modal Form Tambah / Edit Karyawan (CRUD Front-end Preview) -->
+  <!-- Modal Form Tambah Karyawan Baru -->
   <div class="modal fade" id="employeeModal" tabindex="-1" aria-labelledby="employeeModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title fw-bold" id="employeeModalLabel"><i class="bi bi-person-plus me-2 text-primary"></i>Form Data Karyawan</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body">
-          <form id="employeeForm">
+        <form action="{{ route('admin.employees.store') }}" method="POST" id="employeeForm">
+          @csrf
+          <div class="modal-header">
+            <h5 class="modal-title fw-bold" id="employeeModalLabel"><i class="bi bi-person-plus me-2 text-primary"></i>Tambah Karyawan Baru</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
             <div class="mb-3">
-              <label for="employeeName" class="form-label">Nama Lengkap</label>
-              <input type="text" class="form-control" id="employeeName" placeholder="Contoh: Budi Santoso" required>
+              <label for="employeeNip" class="form-label">NIP (Auto-Generated)</label>
+              <input type="text" class="form-control fw-mono bg-body-tertiary" id="employeeNip" name="nip" value="{{ $nextNip }}" readonly title="NIP dibuat otomatis oleh sistem">
+              <small class="text-muted">NIP dibuat otomatis berurutan oleh sistem (Format: EMP{{ date('Y') }}xxx).</small>
             </div>
             <div class="mb-3">
-              <label for="employeeNip" class="form-label">NIP (Nomor Induk Pegawai)</label>
-              <input type="text" class="form-control" id="employeeNip" placeholder="Contoh: 19920101" required>
+              <label for="employeeName" class="form-label">Nama Lengkap Karyawan</label>
+              <input type="text" class="form-control" id="employeeName" name="name" placeholder="Contoh: Ahmad Fauzi" required>
             </div>
             <div class="mb-3">
-              <label for="employeeEmail" class="form-label">Alamat Email</label>
-              <input type="email" class="form-control" id="employeeEmail" placeholder="nama@perusahaan.com" required>
+              <label for="employeePosition" class="form-label">Jabatan / Tim</label>
+              <input type="text" class="form-control" id="employeePosition" name="position" placeholder="Contoh: Operations Specialist">
             </div>
             <div class="row g-2 mb-3">
               <div class="col-md-6">
                 <label for="employeeRole" class="form-label">Role Akses</label>
-                <select class="form-select" id="employeeRole">
+                <select class="form-select" id="employeeRole" name="role" required>
                   <option value="user" selected>Karyawan (User)</option>
                   <option value="admin">Administrator (HR)</option>
                 </select>
               </div>
               <div class="col-md-6">
-                <label for="employeeStatus" class="form-label">Status Akun</label>
-                <select class="form-select" id="employeeStatus">
-                  <option value="active" selected>Aktif</option>
-                  <option value="pending">Pending Biometrik</option>
-                  <option value="suspended">Non-Aktif</option>
-                </select>
+                <label class="form-label">Status Akun Awal</label>
+                <input type="text" class="form-control text-warning fw-semibold bg-body-tertiary" value="Pending Biometrik" readonly>
+                <small class="text-muted" style="font-size: 0.75rem;">Status otomatis Pending Biometrik sampai foto wajah didaftarkan.</small>
               </div>
             </div>
             <div class="mb-3">
-              <label for="employeePassword" class="form-label">Password Akun</label>
-              <input type="password" class="form-control" id="employeePassword" placeholder="••••••••">
+              <label for="employeePassword" class="form-label">Password Login</label>
+              <div class="input-group">
+                <input type="password" class="form-control" id="employeePassword" name="password" placeholder="••••••••" required minlength="6">
+                <button class="btn btn-outline-secondary" type="button" onclick="togglePasswordVisibility('employeePassword', 'eyeIconEmp')" title="Tampilkan/Sembunyikan Kata Sandi">
+                  <i class="bi bi-eye" id="eyeIconEmp" aria-hidden="true"></i>
+                </button>
+              </div>
             </div>
-          </form>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Batal</button>
-          <button type="button" class="btn btn-primary btn-sm"><i class="bi bi-save me-1"></i> Simpan Data</button>
-        </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Batal</button>
+            <button type="submit" class="btn btn-primary btn-sm"><i class="bi bi-save me-1"></i> Simpan Karyawan Baru</button>
+          </div>
+        </form>
       </div>
     </div>
   </div>

@@ -47,16 +47,21 @@
           <p class="text-muted mb-0">Silakan masuk ke akun Absensiku Pro Anda.</p>
         </div>
         <div class="mb-3">
-          <label class="form-label" for="loginEmail">Alamat Email / NIP</label>
-          <input class="form-control @error('email') is-invalid @enderror" id="loginEmail" name="email" type="email" value="{{ old('email') }}" required autofocus placeholder="nama@perusahaan.com">
-          <div class="invalid-feedback">Masukkan email yang valid.</div>
+          <label class="form-label" for="loginNip">Nomor Induk Pegawai (NIP)</label>
+          <input class="form-control @error('nip') is-invalid @enderror" id="loginNip" name="nip" type="text" value="{{ old('nip') }}" required autofocus placeholder="Contoh: ADMIN001 atau EMP2026001">
+          <div class="invalid-feedback">Masukkan NIP akun Anda.</div>
         </div>
         <div class="mb-3">
           <div class="d-flex justify-content-between">
             <label class="form-label" for="loginPassword">Kata Sandi</label>
             <a class="small fw-semibold" href="#">Lupa kata sandi?</a>
           </div>
-          <input class="form-control @error('password') is-invalid @enderror" id="loginPassword" name="password" type="password" minlength="6" required placeholder="••••••••">
+          <div class="input-group">
+            <input class="form-control @error('password') is-invalid @enderror" id="loginPassword" name="password" type="password" minlength="6" required placeholder="••••••••">
+            <button class="btn btn-outline-secondary" type="button" onclick="togglePasswordVisibility('loginPassword', 'eyeIconLogin')" title="Tampilkan/Sembunyikan Kata Sandi">
+              <i class="bi bi-eye" id="eyeIconLogin" aria-hidden="true"></i>
+            </button>
+          </div>
           <div class="invalid-feedback">Kata sandi minimal 6 karakter.</div>
         </div>
         <div class="form-check mb-4">

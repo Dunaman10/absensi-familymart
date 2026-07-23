@@ -6,6 +6,8 @@ use App\Http\Controllers\Admin\EmployeeController;
 use App\Http\Controllers\Admin\GeofenceController;
 use App\Http\Controllers\Admin\ProfileController;
 use App\Http\Controllers\Admin\SettingController;
+use App\Http\Controllers\Employee\AttendanceController as EmployeeAttendanceController;
+use App\Http\Controllers\Employee\DashboardController as EmployeeDashboardController;
 use App\Http\Controllers\Auth\LoginController;
 use Illuminate\Support\Facades\Route;
 
@@ -17,15 +19,38 @@ Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [LoginController::class, 'login']);
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 
-// Route Admin Workspace
-Route::prefix('admin')->name('admin.')->group(function () {
+// Route Admin Workspace (Protected)
+Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/employees', [EmployeeController::class, 'index'])->name('employees.index');
+    Route::get('/employees/export', [EmployeeController::class, 'export'])->name('employees.export');
+    Route::post('/employees', [EmployeeController::class, 'store'])->name('employees.store');
+    Route::put('/employees/{id}', [EmployeeController::class, 'update'])->name('employees.update');
+    Route::delete('/employees/{id}', [EmployeeController::class, 'destroy'])->name('employees.destroy');
     Route::get('/attendance-logs', [AttendanceLogController::class, 'index'])->name('attendance_logs.index');
+    Route::get('/attendance-logs/export', [AttendanceLogController::class, 'export'])->name('attendance_logs.export');
     Route::get('/geofences', [GeofenceController::class, 'index'])->name('geofences.index');
-    Route::get('/settings', [SettingController::class, 'index'])->name('settings.index');
+    Route::post('/geofences', [GeofenceController::class, 'store'])->name('geofences.store');
+    Route::put('/geofences/{id}', [GeofenceController::class, 'update'])->name('geofences.update');
+    Route::delete('/geofences/{id}', [GeofenceController::class, 'destroy'])->name('geofences.destroy');
     Route::get('/profile', [ProfileController::class, 'index'])->name('profile.index');
 });
 
-// Alias /dashboard
-Route::get('/dashboard', [DashboardController::class, 'index']);
+// Route Employee Workspace (Protected)
+Route::prefix('employee')->name('employee.')->middleware('auth')->group(function () {
+    Route::get('/dashboard', [EmployeeDashboardController::class, 'index'])->name('dashboard');
+    Route::get('/attendance/scan', [EmployeeAttendanceController::class, 'scan'])->name('attendance.scan');
+    Route::post('/attendance/store', [EmployeeAttendanceController::class, 'store'])->name('attendance.store');
+    Route::get('/history', [EmployeeAttendanceController::class, 'history'])->name('history');
+});
+
+// Alias /dashboard redirect based on authenticated user role
+Route::get('/dashboard', function () {
+    if (!Auth::check()) {
+        return redirect()->route('login');
+    }
+    return Auth::user()->role === 'admin'
+        ? redirect()->route('admin.dashboard')
+        : redirect()->route('employee.dashboard');
+})->middleware('auth');
+
