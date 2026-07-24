@@ -161,7 +161,9 @@
                 <h2 class="h5 mb-1 section-title"><i class="bi bi-people" aria-hidden="true"></i><span>Presensi Karyawan Terbaru</span></h2>
                 <p class="text-muted mb-0">Aktivitas presensi dan skor biometrik karyawan ter-update dari database.</p>
               </div>
-              <a class="btn btn-outline-secondary btn-sm" href="{{ route('admin.attendance_logs.index') }}">Kelola Semua Log</a>
+                  <div class="d-flex align-items-center gap-2">
+                    <a class="btn btn-outline-secondary btn-sm" href="{{ route('admin.attendance_logs.index') }}">Kelola Semua Log</a>
+                  </div>
             </div>
             <div class="table-responsive">
               <table class="table align-middle mb-0">
@@ -179,7 +181,7 @@
                   <tr>
                     <td>
                       <div class="d-flex align-items-center gap-2">
-                        <img class="avatar-img avatar-sm" src="{{ $log->user->registered_face_photo ? asset($log->user->registered_face_photo) : asset('assets/images/avatar/avatar.jpg') }}" alt="{{ $log->user->name }}">
+                        <img class="avatar-img avatar-sm rounded-circle shadow-sm" src="{{ $log->user->registered_face_photo ? asset($log->user->registered_face_photo) : 'https://ui-avatars.com/api/?name='.urlencode($log->user->name).'&background=0D8ABC&color=fff' }}" alt="{{ $log->user->name }}">
                         <div>
                           <p class="fw-semibold mb-0">{{ $log->user->name }}</p>
                           <small class="text-muted">NIP. {{ $log->user->nip }}</small>
@@ -217,7 +219,7 @@
                         'confidence' => $log->face_confidence_score,
                         'notes' => $log->notes,
                         'photo' => $log->photo_path ? asset($log->photo_path) : null,
-                        'profile_photo' => $log->user->registered_face_photo ? asset($log->user->registered_face_photo) : asset('assets/images/avatar/avatar.jpg')
+                        'profile_photo' => $log->user->registered_face_photo ? asset($log->user->registered_face_photo) : 'https://ui-avatars.com/api/?name='.urlencode($log->user->name).'&background=0D8ABC&color=fff'
                       ]) }})">
                         <i class="bi bi-info-circle me-1"></i> Detail
                       </button>
@@ -231,6 +233,23 @@
                 </tbody>
               </table>
             </div>
+            @if($recentLogs->total() > 0)
+            <div class="panel-footer border-top px-3 py-3 d-flex justify-content-between align-items-center flex-wrap gap-3">
+              <form action="{{ route('admin.dashboard') }}" method="GET" class="mb-0">
+                <div class="d-flex align-items-center gap-2">
+                  <span class="text-muted small">Tampilkan:</span>
+                  <select name="per_page" class="form-select form-select-sm w-auto" onchange="this.form.submit()">
+                    <option value="5" {{ request('per_page') == 5 || !request('per_page') ? 'selected' : '' }}>5 baris</option>
+                    <option value="10" {{ request('per_page') == 10 ? 'selected' : '' }}>10 baris</option>
+                    <option value="25" {{ request('per_page') == 25 ? 'selected' : '' }}>25 baris</option>
+                  </select>
+                </div>
+              </form>
+              <div>
+                {{ $recentLogs->links() }}
+              </div>
+            </div>
+            @endif
           </section>
         </div>
       </main>

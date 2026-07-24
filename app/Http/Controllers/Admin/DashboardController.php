@@ -37,11 +37,11 @@ class DashboardController extends Controller
         $primaryGeofence = GeofenceSetting::where('is_active', true)->first() 
             ?? GeofenceSetting::first();
 
+        $perPage = request('per_page', 5);
         $recentLogs = AttendanceLog::with('user', 'geofence')
             ->latest('date')
             ->latest('time')
-            ->take(5)
-            ->get();
+            ->paginate($perPage)->withQueryString();
 
         $mapLogs = AttendanceLog::with('user')
             ->latest('date')

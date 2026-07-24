@@ -83,12 +83,12 @@ class DashboardController extends Controller
             'total_logs_count' => $totalLogsCount,
         ];
 
+        $perPage = request('per_page', 5);
         $recentLogs = AttendanceLog::where('user_id', $user->id)
             ->with('geofence')
             ->latest('date')
             ->latest('time')
-            ->take(10)
-            ->get();
+            ->paginate($perPage)->withQueryString();
 
         return view('employee.dashboard', compact('user', 'todayStatus', 'geofence', 'employeeStats', 'recentLogs'));
     }

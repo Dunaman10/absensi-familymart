@@ -46,9 +46,9 @@
 
           <!-- Table Container -->
           <div class="card border-0 shadow-sm rounded-4">
-            <div class="card-header bg-transparent border-0 pt-4 px-4 pb-2 d-flex justify-content-between align-items-center">
-              <h5 class="card-title h6 mb-0 fw-bold"><i class="bi bi-list-check me-2 text-primary"></i>Catatan Presensi (30 Hari Terakhir)</h5>
-              <span class="badge bg-body-tertiary text-body border px-3 py-2">Total {{ count($logs) }} Log</span>
+            <div class="card-header bg-transparent border-0 pt-4 px-4 pb-2 d-flex justify-content-between align-items-center flex-wrap gap-2">
+              <h5 class="card-title h6 mb-0 fw-bold"><i class="bi bi-list-check me-2 text-primary"></i>Catatan Presensi Anda</h5>
+              <span class="badge bg-body-tertiary text-body border px-3 py-2">Total {{ $logs->total() }} Log</span>
             </div>
 
             <div class="card-body p-0">
@@ -112,6 +112,24 @@
                 </table>
               </div>
             </div>
+            @if($logs->total() > 0)
+            <div class="card-footer bg-transparent border-top px-4 py-3 d-flex justify-content-between align-items-center flex-wrap gap-3">
+              <form action="{{ route('employee.history') }}" method="GET" class="mb-0">
+                <div class="input-group input-group-sm">
+                  <span class="input-group-text bg-body-tertiary">Tampilkan</span>
+                  <select name="per_page" class="form-select" onchange="this.form.submit()">
+                    <option value="5" {{ request('per_page') == 5 || !request('per_page') ? 'selected' : '' }}>5 baris</option>
+                    <option value="10" {{ request('per_page') == 10 ? 'selected' : '' }}>10 baris</option>
+                    <option value="25" {{ request('per_page') == 25 ? 'selected' : '' }}>25 baris</option>
+                    <option value="50" {{ request('per_page') == 50 ? 'selected' : '' }}>50 baris</option>
+                  </select>
+                </div>
+              </form>
+              <div>
+                {{ $logs->links() }}
+              </div>
+            </div>
+            @endif
           </div>
 
         </div>

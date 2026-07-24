@@ -125,6 +125,7 @@
                 <p class="text-muted mb-0">Master data akun karyawan terdaftar di sistem HRIS.</p>
               </div>
               <form action="{{ route('admin.employees.index') }}" method="GET" class="d-flex flex-wrap gap-2">
+                @if(request('per_page')) <input type="hidden" name="per_page" value="{{ request('per_page') }}"> @endif
                 <div class="input-group input-group-sm">
                   <input class="form-control table-search" type="search" name="search" value="{{ request('search') }}" placeholder="Cari karyawan" aria-label="Search employees" id="employeeSearchInput">
                   <button class="btn btn-outline-secondary" type="submit"><i class="bi bi-search"></i></button>
@@ -151,7 +152,7 @@
                   <tr>
                     <td>
                       <div class="d-flex align-items-center gap-2">
-                        <img class="avatar-img avatar-sm" src="{{ $emp->registered_face_photo ? asset($emp->registered_face_photo) : asset('assets/images/avatar/avatar.jpg') }}" alt="{{ $emp->name }}">
+                        <img class="avatar-img avatar-sm rounded-circle shadow-sm" src="{{ $emp->registered_face_photo ? asset($emp->registered_face_photo) : 'https://ui-avatars.com/api/?name='.urlencode($emp->name).'&background=0D8ABC&color=fff' }}" alt="{{ $emp->name }}">
                         <div>
                           <p class="fw-semibold mb-0">{{ $emp->name }}</p>
                           <small class="text-muted">NIP. {{ $emp->nip }}</small>
@@ -195,6 +196,26 @@
                 </tbody>
               </table>
             </div>
+            @if($employees->total() > 0)
+            <div class="panel-footer border-top px-3 py-3 d-flex justify-content-between align-items-center flex-wrap gap-3">
+              <form action="{{ route('admin.employees.index') }}" method="GET" class="mb-0">
+                @if(request('search')) <input type="hidden" name="search" value="{{ request('search') }}"> @endif
+                <div class="d-flex align-items-center gap-2">
+                  <span class="text-muted small">Tampilkan:</span>
+                  <select name="per_page" class="form-select form-select-sm w-auto" onchange="this.form.submit()">
+                    <option value="5" {{ request('per_page') == 5 || !request('per_page') ? 'selected' : '' }}>5 baris</option>
+                    <option value="10" {{ request('per_page') == 10 ? 'selected' : '' }}>10 baris</option>
+                    <option value="25" {{ request('per_page') == 25 ? 'selected' : '' }}>25 baris</option>
+                    <option value="50" {{ request('per_page') == 50 ? 'selected' : '' }}>50 baris</option>
+                    <option value="100" {{ request('per_page') == 100 ? 'selected' : '' }}>100 baris</option>
+                  </select>
+                </div>
+              </form>
+              <div>
+                {{ $employees->links() }}
+              </div>
+            </div>
+            @endif
           </section>
         </div>
       </main>

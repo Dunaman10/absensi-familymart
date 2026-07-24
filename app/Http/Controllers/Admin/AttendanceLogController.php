@@ -43,7 +43,8 @@ class AttendanceLogController extends Controller
         $checkOutLogs = AttendanceLog::where('type', 'PULANG')->count();
         $outOfRadiusLogs = AttendanceLog::where('is_outside_radius', true)->count();
 
-        $logs = $query->latest('date')->latest('time')->get();
+        $perPage = $request->input('per_page', 5);
+        $logs = $query->latest('date')->latest('time')->paginate($perPage)->withQueryString();
 
         if ($request->wantsJson() || $request->has('json')) {
             return response()->json([

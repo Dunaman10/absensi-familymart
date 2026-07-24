@@ -35,7 +35,8 @@ class EmployeeController extends Controller
             });
         }
 
-        $employees = $query->latest()->get();
+        $perPage = $request->input('per_page', 5);
+        $employees = $query->latest()->paginate($perPage)->withQueryString();
 
         return view('admin.employees.index', compact(
             'totalEmployees',

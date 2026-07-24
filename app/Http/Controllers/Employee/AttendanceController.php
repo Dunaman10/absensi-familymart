@@ -110,11 +110,12 @@ class AttendanceController extends Controller
     {
         $user = Auth::user();
 
+        $perPage = request('per_page', 5);
         $logs = AttendanceLog::where('user_id', $user->id)
             ->with('geofence')
             ->latest('date')
             ->latest('time')
-            ->get();
+            ->paginate($perPage)->withQueryString();
 
         return view('employee.history', compact('logs'));
     }

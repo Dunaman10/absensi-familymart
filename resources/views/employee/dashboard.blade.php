@@ -162,12 +162,14 @@
 
             <div class="col-12 col-lg-8">
               <div class="card border-0 shadow-sm rounded-4 h-100">
-                <div class="card-header bg-transparent border-0 pt-4 px-4 pb-2 d-flex justify-content-between align-items-center">
+                <div class="card-header bg-transparent border-0 pt-4 px-4 pb-2 d-flex justify-content-between align-items-center flex-wrap gap-2">
                   <div>
                     <h5 class="card-title h6 mb-1 fw-bold"><i class="bi bi-clock-history me-2 text-primary"></i>Presensi Terbaru Saya</h5>
-                    <p class="card-subtitle text-muted small">Ringkasan 5 aktivitas presensi terakhir.</p>
+                    <p class="card-subtitle text-muted small">Ringkasan aktivitas presensi terbaru.</p>
                   </div>
-                  <a href="{{ route('employee.history') }}" class="btn btn-outline-primary btn-sm rounded-pill px-3">Lihat Semua</a>
+                  <div class="d-flex align-items-center gap-2">
+                    <a href="{{ route('employee.history') }}" class="btn btn-outline-primary btn-sm rounded-pill px-3">Lihat Semua</a>
+                  </div>
                 </div>
 
                 <div class="card-body p-0">
@@ -223,6 +225,23 @@
                     </table>
                   </div>
                 </div>
+                @if($recentLogs->total() > 0)
+                <div class="card-footer bg-transparent border-top px-4 py-3 d-flex justify-content-between align-items-center flex-wrap gap-3">
+                  <form action="{{ route('employee.dashboard') }}" method="GET" class="mb-0">
+                    <div class="d-flex align-items-center gap-2">
+                      <span class="text-muted small">Tampilkan:</span>
+                      <select name="per_page" class="form-select form-select-sm rounded-pill w-auto" onchange="this.form.submit()">
+                        <option value="5" {{ request('per_page') == 5 || !request('per_page') ? 'selected' : '' }}>5 baris</option>
+                        <option value="10" {{ request('per_page') == 10 ? 'selected' : '' }}>10 baris</option>
+                        <option value="25" {{ request('per_page') == 25 ? 'selected' : '' }}>25 baris</option>
+                      </select>
+                    </div>
+                  </form>
+                  <div>
+                    {{ $recentLogs->links() }}
+                  </div>
+                </div>
+                @endif
               </div>
             </div>
           </div>

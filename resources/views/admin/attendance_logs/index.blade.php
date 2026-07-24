@@ -123,6 +123,7 @@
                 <p class="text-muted mb-0">Tabel log presensi read-only beserta tangkapan foto biometrik wajah dan koordinat.</p>
               </div>
               <form action="{{ route('admin.attendance_logs.index') }}" method="GET" class="d-flex flex-wrap gap-2">
+                @if(request('per_page')) <input type="hidden" name="per_page" value="{{ request('per_page') }}"> @endif
                 @if(request('date_from')) <input type="hidden" name="date_from" value="{{ request('date_from') }}"> @endif
                 @if(request('date_to')) <input type="hidden" name="date_to" value="{{ request('date_to') }}"> @endif
                 <div class="input-group input-group-sm">
@@ -150,7 +151,7 @@
                   <tr>
                     <td>
                       <div class="d-flex align-items-center gap-2">
-                        <img class="avatar-img avatar-sm" src="{{ $log->user->registered_face_photo ? asset($log->user->registered_face_photo) : asset('assets/images/avatar/avatar.jpg') }}" alt="{{ $log->user->name }}">
+                        <img class="avatar-img avatar-sm rounded-circle shadow-sm" src="{{ $log->user->registered_face_photo ? asset($log->user->registered_face_photo) : 'https://ui-avatars.com/api/?name='.urlencode($log->user->name).'&background=0D8ABC&color=fff' }}" alt="{{ $log->user->name }}">
                         <div>
                           <p class="fw-semibold mb-0">{{ $log->user->name }}</p>
                           <small class="text-muted">NIP. {{ $log->user->nip }}</small>
@@ -194,7 +195,7 @@
                         'confidence' => $log->face_confidence_score,
                         'notes' => $log->notes,
                         'photo' => $log->photo_path ? asset($log->photo_path) : null,
-                        'profile_photo' => $log->user->registered_face_photo ? asset($log->user->registered_face_photo) : asset('assets/images/avatar/avatar.jpg')
+                        'profile_photo' => $log->user->registered_face_photo ? asset($log->user->registered_face_photo) : 'https://ui-avatars.com/api/?name='.urlencode($log->user->name).'&background=0D8ABC&color=fff'
                       ]) }})">
                         <i class="bi bi-info-circle me-1"></i> Detail
                       </button>
@@ -208,6 +209,28 @@
                 </tbody>
               </table>
             </div>
+            @if($logs->total() > 0)
+            <div class="panel-footer border-top px-3 py-3 d-flex justify-content-between align-items-center flex-wrap gap-3">
+              <form action="{{ route('admin.attendance_logs.index') }}" method="GET" class="mb-0">
+                @if(request('search')) <input type="hidden" name="search" value="{{ request('search') }}"> @endif
+                @if(request('date_from')) <input type="hidden" name="date_from" value="{{ request('date_from') }}"> @endif
+                @if(request('date_to')) <input type="hidden" name="date_to" value="{{ request('date_to') }}"> @endif
+                <div class="d-flex align-items-center gap-2">
+                  <span class="text-muted small">Tampilkan:</span>
+                  <select name="per_page" class="form-select form-select-sm w-auto" onchange="this.form.submit()">
+                    <option value="5" {{ request('per_page') == 5 || !request('per_page') ? 'selected' : '' }}>5 baris</option>
+                    <option value="10" {{ request('per_page') == 10 ? 'selected' : '' }}>10 baris</option>
+                    <option value="25" {{ request('per_page') == 25 ? 'selected' : '' }}>25 baris</option>
+                    <option value="50" {{ request('per_page') == 50 ? 'selected' : '' }}>50 baris</option>
+                    <option value="100" {{ request('per_page') == 100 ? 'selected' : '' }}>100 baris</option>
+                  </select>
+                </div>
+              </form>
+              <div>
+                {{ $logs->links() }}
+              </div>
+            </div>
+            @endif
           </section>
         </div>
       </main>
@@ -414,7 +437,7 @@
             confidence: log.face_confidence,
             notes: log.notes,
             photo: log.photo_url,
-            profile_photo: log.registered_face_url || '{{ asset('assets/images/avatar/avatar.jpg') }}'
+            profile_photo: log.registered_face_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(log.user.name)}&background=0D8ABC&color=fff`
           };
 
           html += `
