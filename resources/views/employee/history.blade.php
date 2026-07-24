@@ -57,13 +57,9 @@
                   <thead class="table-light">
                     <tr>
                       <th class="ps-4">Tanggal & Hari</th>
-                      <th>Jam Masuk</th>
-                      <th>Jam Pulang</th>
+                      <th>Tipe & Waktu</th>
                       <th>Status Kehadiran</th>
-                      <th>Jarak Geofence</th>
-                      <th>Confidence Score</th>
-                      <th>Catatan</th>
-                      <th class="pe-4 text-center">Pratinjau Foto</th>
+                      <th class="pe-4 text-center">Aksi</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -85,33 +81,31 @@
                         @elseif($log->status == 'PULANG_CEPAT')
                           <span class="badge bg-info text-white px-2 py-1 rounded-pill"><i class="bi bi-box-arrow-right me-1"></i>Pulang Cepat</span>
                         @else
-                          <span class="badge bg-danger text-white px-2 py-1 rounded-pill"><i class="bi bi-geo-alt me-1"></i>Luar Radius</span>
+                          <span class="badge bg-secondary text-white px-2 py-1 rounded-pill">{{ $log->status }}</span>
                         @endif
-                      </td>
-                      <td>
-                        <span class="small {{ $log->status == 'LUAR_RADIUS' ? 'text-danger' : 'text-success' }} fw-semibold"><i class="bi bi-geo-alt me-1"></i>{{ $log->distance_from_office }}m</span>
-                      </td>
-                      <td>
-                        @if($log->face_confidence_score)
-                          <span class="small text-success fw-semibold"><i class="bi bi-shield-check me-1"></i>{{ $log->face_confidence_score }}% Match</span>
-                        @else
-                          <span class="text-muted small">N/A</span>
-                        @endif
-                      </td>
-                      <td>
-                        <span class="small text-muted">{{ $log->geofence->office_name ?? 'Kantor Utama' }}</span>
                       </td>
                       <td class="pe-4 text-center">
-                        @if($log->photo_path)
-                          <img src="{{ asset($log->photo_path) }}" alt="Foto Presensi" class="rounded-circle border" style="width: 36px; height: 36px; object-fit: cover; cursor: pointer;" onclick="showPhotoModal('{{ asset($log->photo_path) }}', '{{ $log->date }}')">
-                        @else
-                          <span class="text-muted small">-</span>
-                        @endif
+                        <button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-3" onclick="showEmployeeDetailModal({{ json_encode([
+                          'date' => \Carbon\Carbon::parse($log->date)->translatedFormat('d F Y'),
+                          'time' => $log->time,
+                          'type' => $log->type,
+                          'status' => $log->status,
+                          'is_outside_radius' => $log->is_outside_radius,
+                          'distance' => $log->distance_from_office,
+                          'lat' => $log->lat,
+                          'lng' => $log->lng,
+                          'office' => $log->geofence->office_name ?? 'Kantor Utama',
+                          'confidence' => $log->face_confidence_score,
+                          'notes' => $log->notes,
+                          'photo' => $log->photo_path ? asset($log->photo_path) : null
+                        ]) }})">
+                          <i class="bi bi-info-circle me-1"></i> Detail
+                        </button>
                       </td>
                     </tr>
                     @empty
                     <tr>
-                      <td colspan="7" class="text-center text-muted py-4">Belum ada riwayat presensi recorded.</td>
+                      <td colspan="8" class="text-center text-muted py-4">Belum ada riwayat presensi recorded.</td>
                     </tr>
                     @endforelse
                   </tbody>
@@ -125,17 +119,47 @@
     </div>
   </div>
 
-  <!-- Modal Lightbox Preview Foto -->
-  <div class="modal fade" id="photoModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-sm">
+  <!-- Modal Detail Presensi Employee -->
+  <div class="modal fade" id="employeeDetailModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content rounded-4 border-0 shadow">
         <div class="modal-header border-0 pb-0">
-          <h6 class="modal-title fw-bold">Pratinjau Foto Presensi</h6>
+          <h6 class="modal-title fw-bold"><i class="bi bi-info-circle text-primary me-2"></i>Detail Presensi</h6>
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
-        <div class="modal-body text-center p-4">
-          <img id="modalImg" src="" alt="Bukti Presensi" class="img-fluid rounded-3 mb-3 border shadow-sm" style="max-height: 280px;">
-          <p id="modalDate" class="small text-muted mb-0"></p>
+        <div class="modal-body p-4">
+          <div class="row g-3 mb-3">
+            <div class="col-6">
+              <small class="text-muted d-block mb-1">Tanggal & Waktu</small>
+              <span class="fw-medium" id="empDetailDatetime">-</span>
+            </div>
+            <div class="col-6">
+              <small class="text-muted d-block mb-1">Tipe & Status</small>
+              <span id="empDetailStatusBadge"></span>
+            </div>
+          </div>
+          <div class="row g-3 mb-4">
+            <div class="col-6">
+              <small class="text-muted d-block mb-1">Biometrik Wajah</small>
+              <span class="fw-medium text-success" id="empDetailBiometric"><i class="bi bi-shield-check me-1"></i>-</span>
+            </div>
+            <div class="col-6">
+              <small class="text-muted d-block mb-1">Lokasi Geofence</small>
+              <span class="fw-medium" id="empDetailLocation">-</span>
+              <small class="d-block text-muted" id="empDetailCoords" style="font-size: 0.75rem;">-</small>
+              <small class="d-block text-muted mt-1" id="empDetailOffice">-</small>
+            </div>
+          </div>
+          <div class="mb-4">
+            <small class="text-muted d-block mb-1">Catatan Anda</small>
+            <div class="p-2 bg-body-secondary rounded text-body border" id="empDetailNotes" style="font-size: 0.85rem;">-</div>
+          </div>
+          <div>
+            <small class="text-muted d-block mb-2 text-center">Foto Bukti Presensi</small>
+            <div class="p-2 bg-dark rounded-3 text-center">
+              <img id="empDetailPhotoImg" src="" alt="Foto Presensi" class="img-fluid rounded-3" style="max-height: 250px; width: auto; object-fit: contain;">
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -145,10 +169,42 @@
   <script src="{{ asset('assets/js/bootstrap.bundle.min.js') }}"></script>
   <script src="{{ asset('assets/js/main.js') }}"></script>
   <script>
-    function showPhotoModal(src, date) {
-      document.getElementById('modalImg').src = src;
-      document.getElementById('modalDate').textContent = 'Tanggal Presensi: ' + date;
-      const modal = new bootstrap.Modal(document.getElementById('photoModal'));
+    function showEmployeeDetailModal(data) {
+      document.getElementById('empDetailDatetime').textContent = data.date + ' ' + data.time + ' WIB';
+      
+      let statusBadge = '';
+      if (data.status === 'TEPAT_WAKTU') {
+        statusBadge = `<span class="badge bg-success px-2 py-1"><i class="bi bi-check-circle me-1"></i>Tepat Waktu</span>`;
+      } else if (data.status === 'TERLAMBAT') {
+        statusBadge = `<span class="badge bg-warning text-dark px-2 py-1"><i class="bi bi-clock-history me-1"></i>Terlambat</span>`;
+      } else if (data.status === 'PULANG_CEPAT') {
+        statusBadge = `<span class="badge bg-info px-2 py-1"><i class="bi bi-box-arrow-right me-1"></i>Pulang Cepat</span>`;
+      } else {
+        statusBadge = `<span class="badge bg-secondary px-2 py-1">${data.status}</span>`;
+      }
+      
+      let typeBadge = data.type === 'MASUK' ? `<span class="badge bg-primary me-1 px-2 py-1">MASUK</span>` : `<span class="badge bg-danger me-1 px-2 py-1">PULANG</span>`;
+      document.getElementById('empDetailStatusBadge').innerHTML = typeBadge + statusBadge;
+      
+      document.getElementById('empDetailBiometric').innerHTML = data.confidence ? `<i class="bi bi-shield-check me-1"></i>${data.confidence}% Match` : 'N/A';
+      
+      let locationClass = data.is_outside_radius ? 'text-danger' : 'text-success';
+      let locationText = data.is_outside_radius ? 'Luar Radius' : 'Dalam Radius';
+      document.getElementById('empDetailLocation').innerHTML = `<span class="${locationClass}">${data.distance}m (${locationText})</span>`;
+      document.getElementById('empDetailCoords').textContent = `${data.lat}, ${data.lng}`;
+      document.getElementById('empDetailOffice').textContent = data.office;
+      
+      document.getElementById('empDetailNotes').textContent = data.notes ? data.notes : '-';
+      
+      const photoEl = document.getElementById('empDetailPhotoImg');
+      if (data.photo) {
+        photoEl.src = data.photo;
+        photoEl.parentElement.style.display = 'block';
+      } else {
+        photoEl.parentElement.style.display = 'none';
+      }
+      
+      const modal = new bootstrap.Modal(document.getElementById('employeeDetailModal'));
       modal.show();
     }
   </script>

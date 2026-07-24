@@ -120,6 +120,7 @@ class EmployeeController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:users,email|max:255',
             'position' => 'nullable|string|max:255',
             'password' => 'required|string|min:6',
         ]);
@@ -129,6 +130,7 @@ class EmployeeController extends Controller
         User::create([
             'nip' => $nip,
             'name' => $validated['name'],
+            'email' => $validated['email'],
             'position' => $validated['position'] ?? null,
             'password' => Hash::make($validated['password']),
             'role' => 'user',
@@ -148,13 +150,20 @@ class EmployeeController extends Controller
 
         $validated = $request->validate([
             'name' => 'required|string|max:255',
+            'email' => 'required|email|max:255|unique:users,email,'.$id,
             'position' => 'nullable|string|max:255',
+            'password' => 'nullable|string|min:6',
         ], [
             'name.required' => 'Nama karyawan wajib diisi.',
+            'password.min' => 'Password minimal 6 karakter.',
         ]);
 
         $user->name = $validated['name'];
+        $user->email = $validated['email'];
         $user->position = $validated['position'] ?? null;
+        if ($request->filled('password')) {
+            $user->password = Hash::make($validated['password']);
+        }
         $user->save();
 
         return redirect()->route('admin.employees.index')

@@ -16,7 +16,7 @@ class DashboardController extends Controller
     public function index()
     {
         $user = Auth::user();
-        $today = now()->toDateString();
+        $today = now()->timezone('Asia/Jakarta')->toDateString();
 
         $primaryGeofence = GeofenceSetting::where('is_active', true)->first() 
             ?? GeofenceSetting::first();
@@ -42,7 +42,7 @@ class DashboardController extends Controller
             'status' => $statusText,
             'check_in' => $checkInLog ? $checkInLog->time : null,
             'check_out' => $checkOutLog ? $checkOutLog->time : null,
-            'date_formatted' => now()->translatedFormat('l, d F Y'),
+            'date_formatted' => now()->timezone('Asia/Jakarta')->translatedFormat('l, d F Y'),
         ];
 
         $geofence = [
@@ -55,22 +55,22 @@ class DashboardController extends Controller
         ];
 
         $presentCount = AttendanceLog::where('user_id', $user->id)
-            ->whereMonth('date', now()->month)
-            ->whereYear('date', now()->year)
+            ->whereMonth('date', now()->timezone('Asia/Jakarta')->month)
+            ->whereYear('date', now()->timezone('Asia/Jakarta')->year)
             ->where('type', 'MASUK')
             ->whereIn('status', ['TEPAT_WAKTU', 'TERLAMBAT'])
             ->count();
 
         $lateCount = AttendanceLog::where('user_id', $user->id)
-            ->whereMonth('date', now()->month)
-            ->whereYear('date', now()->year)
+            ->whereMonth('date', now()->timezone('Asia/Jakarta')->month)
+            ->whereYear('date', now()->timezone('Asia/Jakarta')->year)
             ->where('type', 'MASUK')
             ->where('status', 'TERLAMBAT')
             ->count();
 
         $outOfRadiusCount = AttendanceLog::where('user_id', $user->id)
-            ->whereMonth('date', now()->month)
-            ->whereYear('date', now()->year)
+            ->whereMonth('date', now()->timezone('Asia/Jakarta')->month)
+            ->whereYear('date', now()->timezone('Asia/Jakarta')->year)
             ->where('status', 'LUAR_RADIUS')
             ->count();
 

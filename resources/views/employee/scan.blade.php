@@ -197,6 +197,12 @@
                     </div>
                   </div>
 
+                  <!-- Notes Input -->
+                  <div class="mb-3 text-start">
+                    <label for="attendanceNotes" class="form-label text-muted" style="font-size: 0.78rem;">Catatan Tambahan (Opsional)</label>
+                    <textarea class="form-control" id="attendanceNotes" rows="2" placeholder="Tulis alasan jika terlambat atau berada di luar radius..."></textarea>
+                  </div>
+
                   <!-- Sleek & Well-Proportioned Attendance Action Buttons -->
                   <div class="row g-2">
                     <div class="col-6">
@@ -242,6 +248,7 @@
     <input type="hidden" name="photo_data" id="formPhotoData">
     <input type="hidden" name="face_descriptor" id="formFaceDescriptor">
     <input type="hidden" name="face_confidence_score" id="formFaceConfidenceScore">
+    <input type="hidden" name="notes" id="formNotes">
   </form>
 
   @if($user->registered_face_photo)
@@ -618,6 +625,10 @@
       }
 
       document.getElementById('attendanceType').value = type;
+      
+      // Pass notes value
+      const notesValue = document.getElementById('attendanceNotes').value;
+      document.getElementById('formNotes').value = notesValue;
       
       // Short 200ms delay to allow loading animation to render smoothly before form submit
       setTimeout(() => {

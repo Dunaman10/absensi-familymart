@@ -28,15 +28,20 @@ class ProfileController extends Controller
 
         $validated = $request->validate([
             'name' => 'required|string|max:255',
+            'email' => 'required|email|max:255|unique:users,email,'.$user->id,
             'position' => 'nullable|string|max:255',
             'profile_photo' => 'nullable|file|mimes:jpeg,png,jpg,webp,heic|max:1024',
         ], [
             'name.required' => 'Nama lengkap wajib diisi.',
+            'email.required' => 'Email wajib diisi.',
+            'email.email' => 'Format email tidak valid.',
+            'email.unique' => 'Email ini sudah digunakan oleh akun lain.',
             'profile_photo.mimes' => 'Format foto profil harus JPG, PNG, WEBP, atau HEIC.',
             'profile_photo.max' => 'Ukuran file foto profil terlalu besar. Maksimal 1MB.',
         ]);
 
         $user->name = $validated['name'];
+        $user->email = $validated['email'];
         if ($request->filled('position')) {
             $user->position = $validated['position'];
         }

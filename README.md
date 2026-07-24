@@ -21,12 +21,13 @@
 - **Validasi Lokasi (Geofence)**: Presensi hanya dapat dilakukan jika jarak karyawan ke kantor sesuai dengan radius yang ditetapkan Admin.
 - **Riwayat Presensi Saya**: Memantau catatan riwayat waktu kerja.
 - **Profil Karyawan**: Mengubah detail pribadi, foto biometrik (dengan batasan ukuran 1MB), dan password.
+- **Lupa Kata Sandi (OTP via Email)**: Fitur reset password mandiri menggunakan verifikasi kode OTP yang dikirimkan ke email karyawan.
 
 ---
 
 ## 🛠️ Teknologi yang Digunakan
 
-- **Backend**: [Laravel](https://laravel.com/) (PHP)
+- **Backend**: [Laravel 11](https://laravel.com/) (PHP)
 - **Frontend**: Blade Templating, HTML5, Vanilla JavaScript, [Bootstrap 5](https://getbootstrap.com/)
 - **Biometrik**: [face-api.js](https://github.com/vladmandic/face-api) (TensorFlow.js berbasis browser)
 - **Database**: MySQL / SQLite (Sesuai Konfigurasi Laravel)
@@ -67,7 +68,7 @@ Pastikan komputer Anda sudah terinstal:
    ```bash
    cp .env.example .env
    ```
-   Buka file `.env` dan atur koneksi database Anda. Contoh untuk MySQL:
+   Buka file `.env` menggunakan code editor Anda, lalu atur bagian database. Contoh untuk MySQL:
    ```env
    DB_CONNECTION=mysql
    DB_HOST=127.0.0.1
@@ -77,31 +78,64 @@ Pastikan komputer Anda sudah terinstal:
    DB_PASSWORD=
    ```
 
-4. **Generate Application Key**
+4. **Konfigurasi Email untuk Fitur OTP Lupa Kata Sandi (PENTING)**
+   Aplikasi ini menggunakan email untuk mengirimkan kode OTP reset sandi. Anda **wajib** mengatur kredensial SMTP di file `.env`. Berikut adalah panduan detail jika Anda menggunakan **Gmail**:
+
+   **Langkah mendapatkan "App Password" (Sandi Aplikasi) Gmail:**
+   - Buka Pengaturan Akun Google Anda di browser (https://myaccount.google.com/).
+   - Masuk ke tab **"Keamanan"** (Security).
+   - Pastikan **"Verifikasi 2 Langkah"** (2-Step Verification) sudah **Aktif**.
+   - Cari dan klik menu **"Sandi Aplikasi"** (App Passwords). (Jika tidak ketemu, gunakan kolom pencarian di atas dan ketik "Sandi Aplikasi").
+   - Buat sandi aplikasi baru dengan memilih "Aplikasi: Email" dan "Perangkat: Lainnya (Nama Khusus)". Anda bisa memberi nama "Absensiku Pro".
+   - Klik **"Buat"** (Generate).
+   - Google akan memunculkan 16 digit huruf (contoh: `abcd efgh ijkl mnop`). **Copy sandi tersebut** (tanpa spasi).
+
+   **Edit file `.env` Anda menjadi seperti ini:**
+   ```env
+   APP_NAME="Absensiku Pro"
+
+   MAIL_MAILER=smtp
+   MAIL_HOST=smtp.gmail.com
+   MAIL_PORT=465
+   MAIL_USERNAME=email_anda@gmail.com
+   MAIL_PASSWORD=paste_16_digit_sandi_aplikasi_di_sini
+   MAIL_ENCRYPTION=smtps
+   MAIL_FROM_ADDRESS="email_anda@gmail.com"
+   MAIL_FROM_NAME="${APP_NAME}"
+   ```
+   *Catatan: Pastikan Anda menggunakan sandi aplikasi, BUKAN kata sandi utama akun Gmail Anda.*
+
+5. **Generate Application Key**
    Buat application key unik untuk enkripsi sesi Laravel:
    ```bash
    php artisan key:generate
    ```
 
-5. **Migrasi Database & Seeder**
+6. **Migrasi Database & Seeder**
    Buat struktur tabel ke dalam database beserta data awal (Default Admin & Pengaturan Geofence):
    ```bash
    php artisan migrate --seed
    ```
-   *(Pastikan Anda membuat database kosong bernama `absensiku_pro` terlebih dahulu di MySQL/phpMyAdmin sebelum perintah ini dijalankan)*
+   *(Pastikan Anda telah membuat database kosong bernama `absensiku_pro` terlebih dahulu di aplikasi seperti phpMyAdmin sebelum perintah ini dijalankan)*
 
-6. **Link Storage (Upload Foto)**
-   Agar foto profil karyawan dapat diakses dari browser, hubungkan folder storage:
+7. **Link Storage (Upload Foto)**
+   Agar foto profil karyawan dan foto bukti absen dapat diakses dari browser, hubungkan folder storage:
    ```bash
    php artisan storage:link
    ```
 
-7. **Jalankan Aplikasi**
+8. **Clear Cache Konfigurasi**
+   Karena ada perubahan pada file `.env` (terutama untuk email SMTP), sangat disarankan membersihkan cache aplikasi:
+   ```bash
+   php artisan optimize:clear
+   ```
+
+9. **Jalankan Aplikasi**
    Nyalakan server development bawaan Laravel:
    ```bash
    php artisan serve
    ```
-   Aplikasi Anda kini berjalan di `http://127.0.0.1:8000`.
+   Aplikasi Anda kini berjalan dan dapat diakses melalui browser di `http://127.0.0.1:8000`.
 
 ---
 
@@ -120,8 +154,8 @@ Setelah proses migrasi dan seeder selesai, Anda dapat login menggunakan akun ber
 ## ⚠️ Catatan Penting Saat Development
 
 - **Izin Akses Kamera dan Lokasi**: Saat mengakses halaman presensi (Scan Karyawan), browser akan meminta izin (Prompt) untuk menggunakan **Kamera** dan **Lokasi (GPS)**. Anda harus mengizinkannya agar validasi biometrik & geofencing bisa bekerja.
-- **Konteks Keamanan Browser (HTTPS)**: API Kamera web (WebRTC/`getUserMedia`) dan API Lokasi (`navigator.geolocation`) biasanya membutuhkan jaringan aman **HTTPS**, KECUALI jika diakses dari `localhost` atau `127.0.0.1`. Jika Anda mengakses lewat IP jaringan (contoh: `192.168.x.x`), fitur kamera mungkin akan di-blokir oleh browser. Solusinya, gunakan *port-forwarding* lokal (seperti ngrok) atau instal SSL lokal.
-- **Ukuran File Upload**: Upload foto biometrik karyawan sudah dikunci maksimal **1 MB** pada Frontend maupun Backend. 
+- **Konteks Keamanan Browser (HTTPS)**: API Kamera web (WebRTC/`getUserMedia`) dan API Lokasi (`navigator.geolocation`) biasanya membutuhkan jaringan aman **HTTPS**, KECUALI jika diakses dari `localhost` atau `127.0.0.1`. Jika Anda mengakses lewat IP jaringan lokal (contoh: `192.168.x.x` lewat HP), fitur kamera mungkin akan di-blokir oleh browser. Solusinya, gunakan *port-forwarding* lokal (seperti ngrok/pinggy) atau instal sertifikat SSL lokal.
+- **Ukuran File Upload**: Upload foto profil/biometrik karyawan sudah dibatasi maksimal **1 MB** untuk menjaga performa server.
 
 ---
 

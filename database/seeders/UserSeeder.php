@@ -18,6 +18,7 @@ class UserSeeder extends Seeder
             ['nip' => 'ADMIN001'],
             [
                 'name' => 'Admin Hasan',
+                'email' => 'admin@absensiku.com',
                 'position' => 'HR Administrator',
                 'password' => Hash::make('password'),
                 'role' => 'admin',
@@ -32,6 +33,7 @@ class UserSeeder extends Seeder
             ['nip' => 'EMP2026001'],
             [
                 'name' => 'Syarif Hidayatullah',
+                'email' => 'syarif@absensiku.com',
                 'position' => 'Software Engineer',
                 'password' => Hash::make('password'),
                 'role' => 'user',
@@ -45,6 +47,7 @@ class UserSeeder extends Seeder
             ['nip' => 'EMP2026002'],
             [
                 'name' => 'Budi Santoso',
+                'email' => 'budi@absensiku.com',
                 'position' => 'UI/UX Designer',
                 'password' => Hash::make('password'),
                 'role' => 'user',
@@ -58,6 +61,7 @@ class UserSeeder extends Seeder
             ['nip' => 'EMP2026003'],
             [
                 'name' => 'Siti Rahma',
+                'email' => 'siti@absensiku.com',
                 'position' => 'HR Specialist',
                 'password' => Hash::make('password'),
                 'role' => 'user',

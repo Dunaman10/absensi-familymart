@@ -43,9 +43,6 @@
               <button class="btn btn-outline-secondary btn-sm" type="button" id="resetMapBtn">
                 <i class="bi bi-arrow-clockwise me-1" aria-hidden="true"></i> Reset Peta
               </button>
-              <button class="btn btn-primary btn-sm" type="button" data-bs-toggle="modal" data-bs-target="#locationModal">
-                <i class="bi bi-geo-fill me-1" aria-hidden="true"></i> Tambah Lokasi Kantor
-              </button>
             </div>
           </div>
 
@@ -194,129 +191,9 @@
             </div>
           </section>
 
-          <!-- Table Daftar Lokasi Kantor Terdaftar -->
-          <section class="panel mt-3">
-            <div class="panel-header flex-wrap gap-2">
-              <div>
-                <h2 class="h5 mb-1 section-title"><i class="bi bi-building-gear" aria-hidden="true"></i><span>Daftar Titik Lokasi Kantor</span></h2>
-                <p class="text-muted mb-0">Kelola cabang kantor yang memiliki aturan geofencing presensi tersendiri.</p>
-              </div>
-              <form action="{{ route('admin.geofences.index') }}" method="GET" class="d-flex gap-2">
-                <div class="input-group input-group-sm">
-                  <input class="form-control table-search" type="search" name="search" value="{{ request('search') }}" placeholder="Cari lokasi kantor..." aria-label="Search locations">
-                  <button class="btn btn-outline-secondary" type="submit"><i class="bi bi-search"></i></button>
-                </div>
-              </form>
-            </div>
-            <div class="table-responsive">
-              <table class="table align-middle mb-0">
-                <thead>
-                  <tr>
-                    <th scope="col">Nama Lokasi Kantor</th>
-                    <th scope="col">Koordinat (Lat, Lng)</th>
-                    <th scope="col">Batas Radius</th>
-                    <th scope="col">Jam Kerja (Shift)</th>
-                    <th scope="col">Toleransi</th>
-                    <th scope="col">Status</th>
-                    <th scope="col" class="text-end">Aksi Editor</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  @forelse($geofences as $geo)
-                  <tr>
-                    <td>
-                      <strong class="d-block">{{ $geo->office_name }}</strong>
-                    </td>
-                    <td><span class="fw-mono text-muted">{{ $geo->lat }}, {{ $geo->lng }}</span></td>
-                    <td><span class="badge text-bg-primary">{{ $geo->radius_in_meters }} Meter</span></td>
-                    <td><span class="badge text-bg-secondary">{{ $geo->shift_start }} - {{ $geo->shift_end }}</span></td>
-                    <td><span class="badge text-bg-warning text-dark">{{ $geo->late_tolerance_minutes }}m</span></td>
-                    <td>
-                      @if($geo->is_active)
-                        <span class="badge text-bg-success">Aktif Utama</span>
-                      @else
-                        <span class="badge text-bg-secondary">Cabang</span>
-                      @endif
-                    </td>
-                    <td class="text-end">
-                      <form id="deleteFormGeo_{{ $geo->id }}" action="{{ route('admin.geofences.destroy', $geo->id) }}" method="POST" class="d-inline">
-                        @csrf
-                        @method('DELETE')
-                        <button type="button" class="btn btn-light btn-sm text-danger" title="Hapus Lokasi" onclick="confirmDeleteGeo('deleteFormGeo_{{ $geo->id }}', '{{ $geo->office_name }}')"><i class="bi bi-trash"></i></button>
-                      </form>
-                    </td>
-                  </tr>
-                  @empty
-                  <tr>
-                    <td colspan="7" class="text-center text-muted py-4">Belum ada lokasi kantor terdaftar.</td>
-                  </tr>
-                  @endforelse
-                </tbody>
-              </table>
-            </div>
           </section>
         </div>
       </main>
-    </div>
-  </div>
-
-  <!-- Modal Form Tambah Lokasi Kantor -->
-  <div class="modal fade" id="locationModal" tabindex="-1" aria-labelledby="locationModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-      <div class="modal-content">
-        <form action="{{ route('admin.geofences.store') }}" method="POST">
-          @csrf
-          <div class="modal-header">
-            <h5 class="modal-title fw-bold" id="locationModalLabel"><i class="bi bi-building-add me-2 text-primary"></i>Tambah Lokasi Kantor Baru</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-          </div>
-          <div class="modal-body">
-            <div class="mb-3">
-              <label for="newOfficeName" class="form-label">Nama Lokasi / Cabang Kantor</label>
-              <input type="text" class="form-control" id="newOfficeName" name="office_name" placeholder="Contoh: Cabang Surabaya" required>
-            </div>
-            <div class="row g-2 mb-3">
-              <div class="col-md-6">
-                <label for="newLat" class="form-label">Latitude</label>
-                <input type="text" class="form-control fw-mono" id="newLat" name="lat" value="-6.2087634" required>
-              </div>
-              <div class="col-md-6">
-                <label for="newLng" class="form-label">Longitude</label>
-                <input type="text" class="form-control fw-mono" id="newLng" name="lng" value="106.8455992" required>
-              </div>
-            </div>
-            <div class="mb-3">
-              <label for="newRadius" class="form-label">Batas Radius Presensi (Meter)</label>
-              <div class="input-group">
-                <input type="number" class="form-control" id="newRadius" name="radius_in_meters" value="100" min="5" max="10000" required>
-                <span class="input-group-text">Meter</span>
-              </div>
-            </div>
-            <div class="row g-2 mb-3">
-              <div class="col-6">
-                <label for="newShiftStart" class="form-label">Jam Masuk</label>
-                <input type="time" class="form-control" id="newShiftStart" name="shift_start" value="08:00" required>
-              </div>
-              <div class="col-6">
-                <label for="newShiftEnd" class="form-label">Jam Pulang</label>
-                <input type="time" class="form-control" id="newShiftEnd" name="shift_end" value="17:00" required>
-              </div>
-            </div>
-            <div class="mb-3">
-              <label for="newTolerance" class="form-label">Toleransi Keterlambatan (Menit)</label>
-              <input type="number" class="form-control" id="newTolerance" name="late_tolerance_minutes" value="15" min="0" required>
-            </div>
-            <div class="form-check mb-2">
-              <input class="form-check-input" type="checkbox" name="is_active" value="1" id="newIsActive">
-              <label class="form-check-input-label small" for="newIsActive">Set sebagai titik pusat kantor utama aktif</label>
-            </div>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Batal</button>
-            <button type="submit" class="btn btn-primary btn-sm"><i class="bi bi-save me-1"></i> Simpan Lokasi</button>
-          </div>
-        </form>
-      </div>
     </div>
   </div>
 
@@ -385,32 +262,6 @@
         });
       }
     });
-  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-  <script>
-    function confirmDeleteGeo(formId, officeName) {
-      Swal.fire({
-        title: 'Konfirmasi Hapus Lokasi',
-        html: `Apakah Anda yakin ingin menghapus titik lokasi kantor <strong class="text-white">${officeName}</strong>?`,
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#ef4444',
-        cancelButtonColor: '#475569',
-        confirmButtonText: '<i class="bi bi-trash me-1"></i> Ya, Hapus',
-        cancelButtonText: 'Batal',
-        background: '#1e293b',
-        color: '#f8fafc',
-        customClass: {
-          popup: 'border border-secondary border-opacity-25 rounded-4 shadow-lg',
-          confirmButton: 'btn btn-danger btn-sm rounded-pill px-4 me-2 shadow-sm',
-          cancelButton: 'btn btn-outline-secondary btn-sm rounded-pill px-4 shadow-sm'
-        },
-        buttonsStyling: false
-      }).then((result) => {
-        if (result.isConfirmed) {
-          document.getElementById(formId).submit();
-        }
-      });
-    }
   </script>
 </body>
 </html>

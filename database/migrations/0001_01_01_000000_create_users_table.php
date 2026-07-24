@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('nip', 50)->unique()->comment('Digunakan untuk Login');
             $table->string('name');
+            $table->string('email')->unique()->nullable();
             $table->string('position')->nullable()->comment('Jabatan / Tim Karyawan');
             $table->string('password');
             $table->enum('role', ['admin', 'user'])->default('user');

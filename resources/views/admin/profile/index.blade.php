@@ -125,6 +125,11 @@
                     </div>
 
                     <div class="col-md-6">
+                      <label class="form-label fw-semibold" for="profileEmail">Alamat Email</label>
+                      <input class="form-control" id="profileEmail" name="email" type="email" value="{{ old('email', $user->email) }}" required>
+                    </div>
+
+                    <div class="col-md-6">
                       <label class="form-label fw-semibold" for="profilePosition">Jabatan / Tim</label>
                       <input class="form-control" id="profilePosition" name="position" type="text" value="{{ old('position', $user->position ?? 'Administrator HR') }}">
                     </div>

@@ -41,7 +41,7 @@ class AttendanceLogController extends Controller
         $totalLogs = AttendanceLog::count();
         $checkInLogs = AttendanceLog::where('type', 'MASUK')->count();
         $checkOutLogs = AttendanceLog::where('type', 'PULANG')->count();
-        $outOfRadiusLogs = AttendanceLog::where('status', 'LUAR_RADIUS')->count();
+        $outOfRadiusLogs = AttendanceLog::where('is_outside_radius', true)->count();
 
         $logs = $query->latest('date')->latest('time')->get();
 
@@ -62,9 +62,12 @@ class AttendanceLogController extends Controller
                         'status' => $log->status,
                         'face_confidence' => $log->face_confidence_score,
                         'distance' => $log->distance_from_office,
+                        'is_outside_radius' => $log->is_outside_radius,
                         'lat' => $log->lat,
                         'lng' => $log->lng,
                         'photo_url' => $log->photo_path ? asset($log->photo_path) : null,
+                        'notes' => $log->notes,
+                        'registered_face_url' => ($log->user && $log->user->registered_face_photo) ? asset($log->user->registered_face_photo) : null,
                     ];
                 }),
             ]);
@@ -139,7 +142,8 @@ class AttendanceLogController extends Controller
                 'Skor Match Biometrik',
                 'Jarak Geofence (Meter)',
                 'Koordinat Lat / Lng',
-                'Lokasi Kantor'
+                'Lokasi Kantor',
+                'Catatan'
             ], ';');
 
             // Data Rows
@@ -156,7 +160,8 @@ class AttendanceLogController extends Controller
                     $log->face_confidence_score ? $log->face_confidence_score . '%' : 'N/A',
                     $log->distance_from_office . ' Meter',
                     "{$log->lat}, {$log->lng}",
-                    $log->geofence->office_name ?? 'Kantor Utama'
+                    $log->geofence->office_name ?? 'Kantor Utama',
+                    $log->notes ?? '-'
                 ], ';');
             }
 

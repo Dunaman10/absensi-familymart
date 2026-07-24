@@ -21,8 +21,8 @@ class AttendanceController extends Controller
     public function scan()
     {
         $user = Auth::user();
-        $today = now()->toDateString();
-        $currentTime = now()->format('H:i:s');
+        $today = now()->timezone('Asia/Jakarta')->toDateString();
+        $currentTime = now()->timezone('Asia/Jakarta')->format('H:i:s');
 
         $primaryGeofence = GeofenceSetting::where('is_active', true)->first() 
             ?? GeofenceSetting::first();
@@ -48,7 +48,7 @@ class AttendanceController extends Controller
             'status' => $statusText,
             'check_in' => $checkInLog ? $checkInLog->time : null,
             'check_out' => $checkOutLog ? $checkOutLog->time : null,
-            'date_formatted' => now()->translatedFormat('l, d F Y'),
+            'date_formatted' => now()->timezone('Asia/Jakarta')->translatedFormat('l, d F Y'),
         ];
 
         $geofence = [
@@ -129,11 +129,12 @@ class AttendanceController extends Controller
             'lat' => 'required|numeric',
             'lng' => 'required|numeric',
             'photo_data' => 'required|string',
+            'notes' => 'nullable|string|max:500',
         ]);
 
         $user = Auth::user();
-        $today = now()->toDateString();
-        $currentTime = now()->format('H:i:s');
+        $today = now()->timezone('Asia/Jakarta')->toDateString();
+        $currentTime = now()->timezone('Asia/Jakarta')->format('H:i:s');
 
         $geofence = GeofenceSetting::where('is_active', true)->first() 
             ?? GeofenceSetting::first();
@@ -145,27 +146,25 @@ class AttendanceController extends Controller
         // Calculate distance using Haversine Formula
         $distance = $this->calculateHaversineDistance($request->lat, $request->lng, $officeLat, $officeLng);
 
-        // Determine Status
-        if ($distance > $allowedRadius) {
-            $status = 'LUAR_RADIUS';
-        } else {
-            if ($request->type === 'MASUK') {
-                $shiftStart = $geofence ? $geofence->shift_start : '08:00:00';
-                $toleranceMin = $geofence ? $geofence->late_tolerance_minutes : 15;
-                $lateTimeLimit = date('H:i:s', strtotime("{$shiftStart} +{$toleranceMin} minutes"));
+        // Determine Radius and Time Status
+        $isOutsideRadius = $distance > $allowedRadius;
 
-                if ($currentTime > $lateTimeLimit) {
-                    $status = 'TERLAMBAT';
-                } else {
-                    $status = 'TEPAT_WAKTU';
-                }
+        if ($request->type === 'MASUK') {
+            $shiftStart = $geofence ? $geofence->shift_start : '08:00:00';
+            $toleranceMin = $geofence ? $geofence->late_tolerance_minutes : 15;
+            $lateTimeLimit = date('H:i:s', strtotime("{$shiftStart} +{$toleranceMin} minutes"));
+
+            if ($currentTime > $lateTimeLimit) {
+                $status = 'TERLAMBAT';
             } else {
-                $shiftEnd = $geofence ? $geofence->shift_end : '17:00:00';
-                if ($currentTime < $shiftEnd) {
-                    $status = 'PULANG_CEPAT';
-                } else {
-                    $status = 'TEPAT_WAKTU';
-                }
+                $status = 'TEPAT_WAKTU';
+            }
+        } else {
+            $shiftEnd = $geofence ? $geofence->shift_end : '17:00:00';
+            if ($currentTime < $shiftEnd) {
+                $status = 'PULANG_CEPAT';
+            } else {
+                $status = 'TEPAT_WAKTU';
             }
         }
 
@@ -236,8 +235,10 @@ class AttendanceController extends Controller
             'lat' => $request->lat,
             'lng' => $request->lng,
             'distance_from_office' => $distance,
+            'is_outside_radius' => $isOutsideRadius,
             'photo_path' => $photoPath,
             'face_confidence_score' => $confidenceScore,
+            'notes' => $request->input('notes'),
         ]);
 
         // Dispatch Real-Time Broadcast Event (Laravel Reverb / WebSockets Listener)

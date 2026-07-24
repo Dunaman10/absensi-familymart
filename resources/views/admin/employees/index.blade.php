@@ -177,7 +177,7 @@
                       @endif
                     </td>
                     <td class="text-end">
-                      <button type="button" class="btn btn-light btn-sm text-primary me-1" title="Edit Karyawan" onclick="openEditEmpModal({{ $emp->id }}, '{{ addslashes($emp->name) }}', '{{ $emp->nip }}', '{{ addslashes($emp->position ?? '') }}')">
+                      <button type="button" class="btn btn-light btn-sm text-primary me-1" title="Edit Karyawan" onclick="openEditEmpModal({{ $emp->id }}, '{{ addslashes($emp->name) }}', '{{ $emp->nip }}', '{{ addslashes($emp->position ?? '') }}', '{{ addslashes($emp->email ?? '') }}')">
                         <i class="bi bi-pencil"></i>
                       </button>
                       <form id="deleteFormEmp_{{ $emp->id }}" action="{{ route('admin.employees.destroy', $emp->id) }}" method="POST" class="d-inline">
@@ -220,6 +220,10 @@
             <div class="mb-3">
               <label for="employeeName" class="form-label">Nama Lengkap Karyawan</label>
               <input type="text" class="form-control" id="employeeName" name="name" placeholder="Contoh: Ahmad Fauzi" required>
+            </div>
+            <div class="mb-3">
+              <label for="employeeEmail" class="form-label">Alamat Email (OTP Reset Sandi)</label>
+              <input type="email" class="form-control" id="employeeEmail" name="email" placeholder="Contoh: fauzi@absensiku.com" required>
             </div>
             <div class="mb-3">
               <label for="employeePosition" class="form-label">Jabatan / Tim</label>
@@ -270,8 +274,22 @@
               <input type="text" class="form-control" id="editEmpName" name="name" required placeholder="Contoh: Ahmad Fauzi">
             </div>
             <div class="mb-3">
+              <label for="editEmpEmail" class="form-label fw-semibold">Alamat Email</label>
+              <input type="email" class="form-control" id="editEmpEmail" name="email" required placeholder="Contoh: fauzi@absensiku.com">
+            </div>
+            <div class="mb-3">
               <label for="editEmpPosition" class="form-label fw-semibold">Jabatan / Tim</label>
               <input type="text" class="form-control" id="editEmpPosition" name="position" placeholder="Contoh: Operations Specialist">
+            </div>
+            <div class="mb-3">
+              <label for="editEmpPassword" class="form-label fw-semibold">Reset Password Baru (Opsional)</label>
+              <div class="input-group">
+                <input type="password" class="form-control" id="editEmpPassword" name="password" placeholder="••••••••" minlength="6">
+                <button class="btn btn-outline-secondary" type="button" onclick="togglePasswordVisibility('editEmpPassword', 'eyeIconEditEmp')" title="Tampilkan/Sembunyikan Kata Sandi">
+                  <i class="bi bi-eye" id="eyeIconEditEmp" aria-hidden="true"></i>
+                </button>
+              </div>
+              <small class="text-muted" style="font-size: 0.75rem;">Biarkan kosong jika tidak ingin mengganti password karyawan.</small>
             </div>
           </div>
           <div class="modal-footer">
@@ -288,11 +306,15 @@
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
   <script>
-    function openEditEmpModal(id, name, nip, position) {
+    function openEditEmpModal(id, name, nip, position, email) {
       document.getElementById('editEmployeeForm').action = `/admin/employees/${id}`;
       document.getElementById('editEmpNip').value = nip;
       document.getElementById('editEmpName').value = name;
+      document.getElementById('editEmpEmail').value = email;
       document.getElementById('editEmpPosition').value = position;
+      if (document.getElementById('editEmpPassword')) {
+        document.getElementById('editEmpPassword').value = '';
+      }
 
       var editModal = new bootstrap.Modal(document.getElementById('editEmployeeModal'));
       editModal.show();

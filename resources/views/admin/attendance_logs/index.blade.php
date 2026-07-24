@@ -142,9 +142,7 @@
                     <th scope="col">Tanggal & Waktu</th>
                     <th scope="col">Tipe Presensi</th>
                     <th scope="col">Status Kehadiran</th>
-                    <th scope="col">Skor Biometrik</th>
-                    <th scope="col">Koordinat & Jarak</th>
-                    <th scope="col">Foto Presensi</th>
+                    <th scope="col">Aksi</th>
                   </tr>
                 </thead>
                 <tbody id="logsTableBody">
@@ -178,28 +176,28 @@
                       @elseif($log->status == 'PULANG_CEPAT')
                         <span class="badge text-bg-info"><i class="bi bi-box-arrow-right me-1"></i>Pulang Cepat</span>
                       @else
-                        <span class="badge text-bg-danger"><i class="bi bi-geo-alt me-1"></i>Luar Radius</span>
+                        <span class="badge text-bg-secondary">{{ $log->status }}</span>
                       @endif
                     </td>
                     <td>
-                      @if($log->face_confidence_score)
-                        <span class="badge text-bg-success"><i class="bi bi-shield-check me-1"></i>{{ $log->face_confidence_score }}% Match</span>
-                      @else
-                        <span class="text-muted small">N/A</span>
-                      @endif
-                    </td>
-                    <td>
-                      <span class="d-block {{ $log->status == 'LUAR_RADIUS' ? 'text-danger' : 'text-success' }} fw-semibold">{{ $log->distance_from_office }}m ({{ $log->status == 'LUAR_RADIUS' ? 'Luar Radius' : 'Dalam Radius' }})</span>
-                      <small class="text-muted">{{ $log->lat }}, {{ $log->lng }}</small>
-                    </td>
-                    <td>
-                      @if($log->photo_path)
-                        <button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-3" onclick="showAdminPhotoModal('{{ asset($log->photo_path) }}', '{{ $log->user->name ?? 'Karyawan' }}', '{{ $log->date }} {{ $log->time }}')">
-                          <i class="bi bi-eye me-1"></i> Lihat Foto
-                        </button>
-                      @else
-                        <span class="text-muted small">Tidak ada foto</span>
-                      @endif
+                      <button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-3" onclick="showAdminDetailModal({{ json_encode([
+                        'name' => $log->user->name ?? 'Karyawan',
+                        'nip' => $log->user->nip,
+                        'date' => \Carbon\Carbon::parse($log->date)->translatedFormat('d F Y'),
+                        'time' => $log->time,
+                        'type' => $log->type,
+                        'status' => $log->status,
+                        'is_outside_radius' => $log->is_outside_radius,
+                        'distance' => $log->distance_from_office,
+                        'lat' => $log->lat,
+                        'lng' => $log->lng,
+                        'confidence' => $log->face_confidence_score,
+                        'notes' => $log->notes,
+                        'photo' => $log->photo_path ? asset($log->photo_path) : null,
+                        'profile_photo' => $log->user->registered_face_photo ? asset($log->user->registered_face_photo) : asset('assets/images/avatar/avatar.jpg')
+                      ]) }})">
+                        <i class="bi bi-info-circle me-1"></i> Detail
+                      </button>
                     </td>
                   </tr>
                   @empty
@@ -247,19 +245,53 @@
     </div>
   </div>
 
-  <!-- Modal Preview Foto Log Presensi -->
-  <div class="modal fade" id="adminPhotoModal" tabindex="-1" aria-hidden="true">
+  <!-- Modal Detail Log Presensi -->
+  <div class="modal fade" id="adminDetailModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content rounded-4 border-0 shadow">
         <div class="modal-header border-0 pb-0">
-          <h6 class="modal-title fw-bold" id="adminPhotoModalTitle"><i class="bi bi-camera-fill text-primary me-2"></i>Foto Bukti Presensi</h6>
+          <h6 class="modal-title fw-bold"><i class="bi bi-info-circle text-primary me-2"></i>Detail Presensi</h6>
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
-        <div class="modal-body text-center p-4">
-          <div class="p-2 bg-dark rounded-3 mb-2 d-inline-block shadow-sm w-100">
-            <img id="adminPhotoImg" src="" alt="Foto Presensi" class="img-fluid rounded-3" style="max-height: 480px; width: auto; max-width: 100%; object-fit: contain;">
+        <div class="modal-body p-4">
+          <div class="d-flex align-items-center gap-3 mb-4">
+            <img id="detailProfileImg" src="" alt="Foto Profil" class="rounded-circle" style="width: 50px; height: 50px; object-fit: cover;">
+            <div>
+              <p class="fw-bold mb-0" id="detailName">-</p>
+              <small class="text-muted" id="detailNip">-</small>
+            </div>
           </div>
-          <p id="adminPhotoSubtext" class="small text-muted mb-0 fw-medium"></p>
+          <div class="row g-3 mb-3">
+            <div class="col-6">
+              <small class="text-muted d-block mb-1">Tanggal & Waktu</small>
+              <span class="fw-medium" id="detailDatetime">-</span>
+            </div>
+            <div class="col-6">
+              <small class="text-muted d-block mb-1">Tipe & Status</small>
+              <span id="detailStatusBadge"></span>
+            </div>
+          </div>
+          <div class="row g-3 mb-4">
+            <div class="col-6">
+              <small class="text-muted d-block mb-1">Biometrik Wajah</small>
+              <span class="fw-medium text-success" id="detailBiometric"><i class="bi bi-shield-check me-1"></i>-</span>
+            </div>
+            <div class="col-6">
+              <small class="text-muted d-block mb-1">Lokasi Geofence</small>
+              <span class="fw-medium" id="detailLocation">-</span>
+              <small class="d-block text-muted" id="detailCoords" style="font-size: 0.75rem;">-</small>
+            </div>
+          </div>
+          <div class="mb-4">
+            <small class="text-muted d-block mb-1">Catatan Karyawan</small>
+            <div class="p-2 bg-body-secondary rounded text-body border" id="detailNotes" style="font-size: 0.85rem;">-</div>
+          </div>
+          <div>
+            <small class="text-muted d-block mb-2 text-center">Foto Bukti Presensi</small>
+            <div class="p-2 bg-dark rounded-3 text-center">
+              <img id="detailPhotoImg" src="" alt="Foto Presensi" class="img-fluid rounded-3" style="max-height: 250px; width: auto; object-fit: contain;">
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -269,10 +301,44 @@
   <script src="{{ asset('assets/js/main.js') }}"></script>
 
   <script>
-    function showAdminPhotoModal(src, name, datetime) {
-      document.getElementById('adminPhotoImg').src = src;
-      document.getElementById('adminPhotoSubtext').textContent = 'Karyawan: ' + name + ' • ' + datetime;
-      const modal = new bootstrap.Modal(document.getElementById('adminPhotoModal'));
+    function showAdminDetailModal(data) {
+      document.getElementById('detailName').textContent = data.name;
+      document.getElementById('detailNip').textContent = 'NIP. ' + data.nip;
+      document.getElementById('detailProfileImg').src = data.profile_photo;
+      document.getElementById('detailDatetime').textContent = data.date + ' ' + data.time + ' WIB';
+      
+      let statusBadge = '';
+      if (data.status === 'TEPAT_WAKTU') {
+        statusBadge = `<span class="badge text-bg-success"><i class="bi bi-check-circle me-1"></i>Tepat Waktu</span>`;
+      } else if (data.status === 'TERLAMBAT') {
+        statusBadge = `<span class="badge text-bg-warning text-dark"><i class="bi bi-clock-history me-1"></i>Terlambat</span>`;
+      } else if (data.status === 'PULANG_CEPAT') {
+        statusBadge = `<span class="badge text-bg-info"><i class="bi bi-box-arrow-right me-1"></i>Pulang Cepat</span>`;
+      } else {
+        statusBadge = `<span class="badge text-bg-secondary">${data.status}</span>`;
+      }
+      
+      let typeBadge = data.type === 'MASUK' ? `<span class="badge text-bg-primary me-1">MASUK</span>` : `<span class="badge text-bg-danger me-1">PULANG</span>`;
+      document.getElementById('detailStatusBadge').innerHTML = typeBadge + statusBadge;
+      
+      document.getElementById('detailBiometric').innerHTML = data.confidence ? `<i class="bi bi-shield-check me-1"></i>${data.confidence}% Match` : 'N/A';
+      
+      let locationClass = data.is_outside_radius ? 'text-danger' : 'text-success';
+      let locationText = data.is_outside_radius ? 'Luar Radius' : 'Dalam Radius';
+      document.getElementById('detailLocation').innerHTML = `<span class="${locationClass}">${data.distance}m (${locationText})</span>`;
+      document.getElementById('detailCoords').textContent = `${data.lat}, ${data.lng}`;
+      
+      document.getElementById('detailNotes').textContent = data.notes ? data.notes : '-';
+      
+      const photoEl = document.getElementById('detailPhotoImg');
+      if (data.photo) {
+        photoEl.src = data.photo;
+        photoEl.parentElement.style.display = 'block';
+      } else {
+        photoEl.parentElement.style.display = 'none';
+      }
+      
+      const modal = new bootstrap.Modal(document.getElementById('adminDetailModal'));
       modal.show();
     }
 
@@ -327,24 +393,35 @@
           if (log.status === 'TEPAT_WAKTU') {
             statusBadge = `<span class="badge text-bg-success"><i class="bi bi-check-circle me-1"></i>Tepat Waktu</span>`;
           } else if (log.status === 'TERLAMBAT') {
-            statusBadge = `<span class="badge text-bg-warning"><i class="bi bi-clock-history me-1"></i>Terlambat</span>`;
+            statusBadge = `<span class="badge text-bg-warning text-dark"><i class="bi bi-clock-history me-1"></i>Terlambat</span>`;
           } else if (log.status === 'PULANG_CEPAT') {
             statusBadge = `<span class="badge text-bg-info"><i class="bi bi-box-arrow-right me-1"></i>Pulang Cepat</span>`;
           } else {
-            statusBadge = `<span class="badge text-bg-danger"><i class="bi bi-geo-alt me-1"></i>Luar Radius</span>`;
+            statusBadge = `<span class="badge text-bg-secondary">${log.status}</span>`;
           }
 
-          let photoBtn = log.photo_url 
-            ? `<button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-3" onclick="showAdminPhotoModal('${log.photo_url}', '${log.user_name}', '${log.date} ${log.time}')"><i class="bi bi-eye me-1"></i> Lihat Foto</button>`
-            : `<span class="text-muted small">Tidak ada foto</span>`;
+          let detailData = {
+            name: log.user_name,
+            nip: log.nip,
+            date: log.date,
+            time: log.time,
+            type: log.type,
+            status: log.status,
+            is_outside_radius: log.is_outside_radius,
+            distance: log.distance,
+            lat: log.lat,
+            lng: log.lng,
+            confidence: log.face_confidence,
+            notes: log.notes,
+            photo: log.photo_url,
+            profile_photo: log.registered_face_url || '{{ asset('assets/images/avatar/avatar.jpg') }}'
+          };
 
           html += `
             <tr>
               <td class="ps-3">
                 <div class="d-flex align-items-center gap-2">
-                  <div class="avatar-circle bg-primary-subtle text-primary fw-bold d-flex align-items-center justify-content-center" style="width:34px; height:34px; border-radius:50%; font-size:0.8rem;">
-                    ${log.user_name.substring(0, 2).toUpperCase()}
-                  </div>
+                  <img class="avatar-img avatar-sm" src="${detailData.profile_photo}" alt="${log.user_name}">
                   <div>
                     <p class="fw-semibold mb-0 text-body">${log.user_name}</p>
                     <small class="text-muted">NIP. ${log.nip}</small>
@@ -357,12 +434,11 @@
               </td>
               <td><span class="badge text-bg-dark">${log.type}</span></td>
               <td>${statusBadge}</td>
-              <td><span class="badge text-bg-success"><i class="bi bi-shield-check me-1"></i>${log.face_confidence || '98'}% Match</span></td>
               <td>
-                <span class="d-block ${log.status === 'LUAR_RADIUS' ? 'text-danger' : 'text-success'} fw-semibold">${log.distance}m (${log.status === 'LUAR_RADIUS' ? 'Luar Radius' : 'Dalam Radius'})</span>
-                <small class="text-muted">${log.lat}, ${log.lng}</small>
+                <button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-3" onclick='showAdminDetailModal(${JSON.stringify(detailData).replace(/'/g, "&#39;")})'>
+                  <i class="bi bi-info-circle me-1"></i> Detail
+                </button>
               </td>
-              <td>${photoBtn}</td>
             </tr>
           `;
         });
