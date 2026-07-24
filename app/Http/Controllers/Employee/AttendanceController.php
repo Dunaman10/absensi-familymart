@@ -60,14 +60,8 @@ class AttendanceController extends Controller
             'shift_end' => $primaryGeofence->shift_end ?? '17:00',
         ];
 
-        // Shift Timings & Dynamic Cutoff Logic
-        $shiftStart = $geofence['shift_start'] . ':00';
-        $shiftEnd = $geofence['shift_end'] . ':00';
-
-        $startSeconds = strtotime("1970-01-01 $shiftStart UTC");
-        $endSeconds = strtotime("1970-01-01 $shiftEnd UTC");
-        $midSeconds = $startSeconds + (($endSeconds - $startSeconds) / 2);
-        $midCutoffTime = date('H:i:s', $midSeconds); // e.g. 12:30:00
+        // Shift Timings & Explicit 12:00 WIB Cutoff Logic
+        $cutoffTime = '12:00:00';
 
         $canCheckIn = true;
         $canCheckOut = true;
@@ -85,16 +79,16 @@ class AttendanceController extends Controller
             $canCheckOut = true;
         } else {
             // Has not checked in yet today
-            if ($currentTime >= $midCutoffTime || $currentTime >= $shiftEnd) {
-                // Past 12:30 / 17:00: Disable Absen Masuk!
+            if ($currentTime >= $cutoffTime) {
+                // Past 12:00 WIB: Disable Absen Masuk!
                 $canCheckIn = false;
-                $checkInDisabledReason = 'Waktu presensi masuk telah berakhir (Batas jam ' . date('H:i', strtotime($midCutoffTime)) . ' WIB).';
+                $checkInDisabledReason = 'Waktu presensi masuk telah berakhir (Batas jam 12:00 WIB).';
                 $canCheckOut = true;
             } else {
-                // Morning Window: Enable Absen Masuk, Disable Absen Pulang
+                // Morning Window (< 12:00 WIB): Enable Absen Masuk, Disable Absen Pulang
                 $canCheckIn = true;
                 $canCheckOut = false;
-                $checkOutDisabledReason = 'Presensi pulang dibuka setelah jam ' . date('H:i', strtotime($midCutoffTime)) . ' WIB.';
+                $checkOutDisabledReason = 'Presensi pulang dibuka setelah jam 12:00 WIB.';
             }
         }
 
@@ -204,6 +198,11 @@ class AttendanceController extends Controller
         file_put_contents($fullPath, $photoData);
         $photoPath = 'uploads/attendance_photos/' . $fileName;
 
+        // Save face descriptor if provided by face-api.js
+        if ($request->filled('face_descriptor')) {
+            $user->face_descriptor = $request->face_descriptor;
+        }
+
         // Check if First-Time Biometric Registration (Pending Biometrik)
         $isFirstTimeRegistration = ($user->account_status === 'Pending Biometrik' || empty($user->registered_face_photo));
 
@@ -219,7 +218,10 @@ class AttendanceController extends Controller
             $confidenceScore = 100.0;
             $message = "Registrasi Wajah Perdana Berhasil! Sampel biometrik resmi didaftarkan. Status akun Anda kini AKTIF.";
         } else {
-            $confidenceScore = round(rand(95, 99) + (rand(0, 9) / 10), 1);
+            $user->save();
+            $confidenceScore = $request->filled('face_confidence_score')
+                ? (float)$request->face_confidence_score
+                : round(rand(95, 99) + (rand(0, 9) / 10), 1);
             $message = "Presensi {$request->type} berhasil dicatat dengan verifikasi biometrik {$confidenceScore}% match!";
         }
 

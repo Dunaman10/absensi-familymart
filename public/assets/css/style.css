@@ -399,6 +399,17 @@ a {
   box-shadow: 0 0 0 2px rgba(15, 23, 42, 0.08);
 }
 
+.profile-button::after,
+.profile-button.dropdown-toggle::after,
+button.profile-button::after,
+.dropdown-toggle.profile-button::after {
+  display: none !important;
+  content: none !important;
+  border: 0 !important;
+  margin: 0 !important;
+  vertical-align: 0 !important;
+}
+
 html[data-theme="dark"] .profile-button .avatar-sm {
   border-color: #54f0be;
   box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.08);

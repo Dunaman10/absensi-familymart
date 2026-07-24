@@ -79,20 +79,20 @@ class User extends Authenticatable
     }
 
     /**
-     * Generate next NIP automatically (Format: EMP{YEAR}{SEQ}, e.g. EMP2026004).
+     * Generate next NIP automatically for employees (Format: EMP{YEAR}{SEQ}, e.g. EMP2026001).
      */
     public static function generateNextNip(): string
     {
         $year = date('Y');
         $prefix = "EMP{$year}";
         
-        $latestUser = self::where('nip', 'LIKE', "{$prefix}%")
-            ->orderBy('id', 'desc')
+        $latestUser = self::where('role', 'user')
+            ->where('nip', 'LIKE', "{$prefix}%")
+            ->orderBy('nip', 'desc')
             ->first();
 
-        if ($latestUser) {
-            $lastNum = (int) substr($latestUser->nip, strlen($prefix));
-            $nextNum = $lastNum + 1;
+        if ($latestUser && preg_match('/' . $prefix . '(\d+)/', $latestUser->nip, $matches)) {
+            $nextNum = (int)$matches[1] + 1;
         } else {
             $nextNum = 1;
         }

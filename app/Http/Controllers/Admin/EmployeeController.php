@@ -122,7 +122,6 @@ class EmployeeController extends Controller
             'name' => 'required|string|max:255',
             'position' => 'nullable|string|max:255',
             'password' => 'required|string|min:6',
-            'role' => 'required|in:admin,user',
         ]);
 
         $nip = User::generateNextNip();
@@ -132,7 +131,7 @@ class EmployeeController extends Controller
             'name' => $validated['name'],
             'position' => $validated['position'] ?? null,
             'password' => Hash::make($validated['password']),
-            'role' => $validated['role'],
+            'role' => 'user',
             'account_status' => 'Pending Biometrik',
         ]);
 
@@ -141,7 +140,7 @@ class EmployeeController extends Controller
     }
 
     /**
-     * Update employee data.
+     * Update employee data (Name & Position only).
      */
     public function update(Request $request, $id)
     {
@@ -150,20 +149,12 @@ class EmployeeController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'position' => 'nullable|string|max:255',
-            'role' => 'required|in:admin,user',
-            'account_status' => 'required|in:Aktif,Non-Aktif,Pending Biometrik',
-            'password' => 'nullable|string|min:6',
+        ], [
+            'name.required' => 'Nama karyawan wajib diisi.',
         ]);
 
         $user->name = $validated['name'];
-        $user->position = $validated['position'];
-        $user->role = $validated['role'];
-        $user->account_status = $validated['account_status'];
-
-        if (!empty($validated['password'])) {
-            $user->password = Hash::make($validated['password']);
-        }
-
+        $user->position = $validated['position'] ?? null;
         $user->save();
 
         return redirect()->route('admin.employees.index')
@@ -171,15 +162,20 @@ class EmployeeController extends Controller
     }
 
     /**
-     * Soft delete an employee.
+     * Permanently delete an employee and their related attendance logs from MySQL database.
      */
     public function destroy($id)
     {
-        $user = User::findOrFail($id);
+        $user = User::withTrashed()->findOrFail($id);
         $name = $user->name;
-        $user->delete();
+
+        // Delete associated attendance logs first
+        $user->attendanceLogs()->delete();
+
+        // Force delete row from users table permanently
+        $user->forceDelete();
 
         return redirect()->route('admin.employees.index')
-            ->with('success', "Akun karyawan '{$name}' telah berhasil dihapus!");
+            ->with('success', "Akun karyawan '{$name}' telah berhasil dihapus permanen dari database!");
     }
 }

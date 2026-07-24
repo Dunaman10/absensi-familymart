@@ -34,6 +34,8 @@ Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
     Route::put('/geofences/{id}', [GeofenceController::class, 'update'])->name('geofences.update');
     Route::delete('/geofences/{id}', [GeofenceController::class, 'destroy'])->name('geofences.destroy');
     Route::get('/profile', [ProfileController::class, 'index'])->name('profile.index');
+    Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::put('/profile/password', [ProfileController::class, 'updatePassword'])->name('profile.password');
 });
 
 // Route Employee Workspace (Protected)
@@ -42,6 +44,9 @@ Route::prefix('employee')->name('employee.')->middleware('auth')->group(function
     Route::get('/attendance/scan', [EmployeeAttendanceController::class, 'scan'])->name('attendance.scan');
     Route::post('/attendance/store', [EmployeeAttendanceController::class, 'store'])->name('attendance.store');
     Route::get('/history', [EmployeeAttendanceController::class, 'history'])->name('history');
+    Route::get('/profile', [\App\Http\Controllers\Employee\ProfileController::class, 'index'])->name('profile.index');
+    Route::put('/profile', [\App\Http\Controllers\Employee\ProfileController::class, 'update'])->name('profile.update');
+    Route::put('/profile/password', [\App\Http\Controllers\Employee\ProfileController::class, 'updatePassword'])->name('profile.password');
 });
 
 // Alias /dashboard redirect based on authenticated user role

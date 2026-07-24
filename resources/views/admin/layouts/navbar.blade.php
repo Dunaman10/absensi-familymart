@@ -10,6 +10,12 @@
       <input class="form-control search-input" type="search" placeholder="Cari data presensi, karyawan..." aria-label="Search">
     </form>
 
+    <div class="d-none d-lg-flex align-items-center me-2">
+      <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-3 py-1.5 small d-flex align-items-center gap-1">
+        <i class="bi bi-geo-alt-fill text-success"></i> <span>{{ \App\Models\GeofenceSetting::where('is_active', true)->value('office_name') ?? 'Kantor Utama' }} (Radius Aktif)</span>
+      </span>
+    </div>
+
     <div class="navbar-actions ms-auto">
       <button class="icon-button theme-toggle" type="button" data-theme-toggle aria-label="Switch color theme" title="Switch color theme">
         <i class="bi bi-moon-stars" data-theme-icon aria-hidden="true"></i>
@@ -41,10 +47,19 @@
         </div>
       </div>
 
+      <style>
+        .profile-button::after, .profile-button.dropdown-toggle::after { display: none !important; content: none !important; }
+      </style>
       <div class="dropdown">
-        <button class="profile-button dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-          <img class="avatar-img avatar-sm" src="{{ Auth::user()->registered_face_photo ? asset(Auth::user()->registered_face_photo) : asset('assets/images/avatar/avatar.jpg') }}" alt="{{ Auth::user()->name }}">
-          <span class="profile-name d-none d-sm-inline">{{ Auth::user()->name }}</span>
+        <button class="profile-button dropdown-toggle d-flex align-items-center gap-2 border-0" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="background: transparent;">
+          @if(Auth::user() && Auth::user()->registered_face_photo)
+            <img class="avatar-img avatar-sm rounded-circle shadow-sm" src="{{ asset(Auth::user()->registered_face_photo) }}" alt="{{ Auth::user()->name }}" style="width: 32px; height: 32px; object-fit: cover;">
+          @else
+            <div class="avatar-sm rounded-circle bg-primary text-white d-flex align-items-center justify-content-center fw-bold shadow-sm" style="width:32px; height:32px; font-size: 0.85rem; flex-shrink: 0;">
+              {{ strtoupper(substr(Auth::user()->name ?? 'A', 0, 1)) }}
+            </div>
+          @endif
+          <span class="profile-name d-none d-sm-inline fw-semibold">{{ Auth::user()->name ?? 'Administrator' }}</span>
         </button>
         <ul class="dropdown-menu dropdown-menu-end">
           <li><a class="dropdown-item {{ request()->routeIs('admin.profile.index') ? 'active' : '' }}" href="{{ route('admin.profile.index') }}"><i class="bi bi-person me-2"></i>Profile</a></li>

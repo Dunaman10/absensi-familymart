@@ -4,7 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <meta name="description" content="Absensiku Pro - Kamera Presensi Mobile UX">
-  <title>Kamera Presensi | Absensiku Pro</title>
+  <title>Kamera Presensi Biometrik | Absensiku Pro</title>
+  <link rel="icon" type="image/svg+xml" href="{{ asset('favicon.svg') }}">
 
   <link rel="stylesheet" href="{{ asset('assets/css/bootstrap.min.css') }}">
   <link rel="stylesheet" href="{{ asset('assets/vendors/bootstrap-icons/bootstrap-icons.css') }}">
@@ -213,12 +214,12 @@
                   </div>
 
                   @if(!$canCheckIn && $checkInDisabledReason)
-                    <div class="mt-2.5 p-2 bg-body-tertiary rounded-3 border border-warning-subtle text-warning small text-center" style="font-size: 0.75rem;">
-                      <i class="bi bi-clock-history me-1"></i>{{ $checkInDisabledReason }}
+                    <div class="mt-3 py-2.5 px-3 bg-body-tertiary rounded-3 border border-warning-subtle text-warning small text-center shadow-sm" style="font-size: 0.78rem; line-height: 1.4;">
+                      <i class="bi bi-clock-history me-1.5"></i>{{ $checkInDisabledReason }}
                     </div>
                   @elseif(!$canCheckOut && $checkOutDisabledReason)
-                    <div class="mt-2.5 p-2 bg-body-tertiary rounded-3 border border-warning-subtle text-warning small text-center" style="font-size: 0.75rem;">
-                      <i class="bi bi-clock-history me-1"></i>{{ $checkOutDisabledReason }}
+                    <div class="mt-3 py-2.5 px-3 bg-body-tertiary rounded-3 border border-warning-subtle text-warning small text-center shadow-sm" style="font-size: 0.78rem; line-height: 1.4;">
+                      <i class="bi bi-clock-history me-1.5"></i>{{ $checkOutDisabledReason }}
                     </div>
                   @endif
 
@@ -239,11 +240,19 @@
     <input type="hidden" name="lat" id="formLat" value="{{ $geofence['office_lat'] }}">
     <input type="hidden" name="lng" id="formLng" value="{{ $geofence['office_lng'] }}">
     <input type="hidden" name="photo_data" id="formPhotoData">
+    <input type="hidden" name="face_descriptor" id="formFaceDescriptor">
+    <input type="hidden" name="face_confidence_score" id="formFaceConfidenceScore">
   </form>
+
+  @if($user->registered_face_photo)
+    <img id="registeredFaceRefImg" src="{{ asset($user->registered_face_photo) }}" class="d-none" crossorigin="anonymous">
+  @endif
 
   <!-- Scripts -->
   <script src="{{ asset('assets/js/bootstrap.bundle.min.js') }}"></script>
   <script src="{{ asset('assets/js/main.js') }}"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@vladmandic/face-api/dist/face-api.js"></script>
 
   <script>
     let videoStream = null;
@@ -291,6 +300,56 @@
       startSimulatedCamera();
     }
 
+    let faceApiLoaded = false;
+    let registeredDescriptor = null;
+    let liveMatchScore = 0;
+
+    // Load AI Face-API models asynchronously
+    async function loadFaceApiModels() {
+      try {
+        if (typeof faceapi === 'undefined') return;
+        
+        await Promise.all([
+          faceapi.nets.tinyFaceDetector.loadFromUri('https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model'),
+          faceapi.nets.faceLandmark68Net.loadFromUri('https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model'),
+          faceapi.nets.faceRecognitionNet.loadFromUri('https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model')
+        ]);
+        faceApiLoaded = true;
+        console.log("AI Biometric face-api models loaded successfully.");
+
+        // Extract registered reference descriptor if reference image exists
+        const regImg = document.getElementById('registeredFaceRefImg');
+        if (regImg) {
+          if (regImg.complete) {
+            initRegisteredDescriptor(regImg);
+          } else {
+            regImg.onload = () => initRegisteredDescriptor(regImg);
+          }
+        }
+      } catch (err) {
+        console.warn("Face-API models CDN unavailable, falling back to instant biometric sampler.", err);
+      }
+    }
+
+    async function initRegisteredDescriptor(imgElement) {
+      if (!faceApiLoaded || !imgElement) return;
+      try {
+        const detection = await faceapi.detectSingleFace(imgElement, new faceapi.TinyFaceDetectorOptions({ inputSize: 224, scoreThreshold: 0.4 }))
+          .withFaceLandmarks()
+          .withFaceDescriptor();
+        if (detection) {
+          registeredDescriptor = detection.descriptor;
+          console.log("Registered employee biometric descriptor ready.");
+        }
+      } catch (e) {
+        console.warn("Could not extract descriptor from registered photo.", e);
+      }
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      loadFaceApiModels();
+    });
+
     function startFaceDetectionLoop() {
       if (faceDetectionInterval) clearInterval(faceDetectionInterval);
 
@@ -312,55 +371,106 @@
         const ctx = canvas.getContext('2d');
         ctx.drawImage(video, 0, 0, width, height);
 
-        const startX = Math.floor(width * 0.35);
-        const startY = Math.floor(height * 0.20);
-        const sampleW = Math.floor(width * 0.30);
-        const sampleH = Math.floor(height * 0.50);
+        if (faceApiLoaded) {
+          faceapi.detectSingleFace(video, new faceapi.TinyFaceDetectorOptions({ inputSize: 224, scoreThreshold: 0.4 }))
+            .withFaceLandmarks()
+            .withFaceDescriptor()
+            .then(detection => {
+              if (detection) {
+                const descriptorArray = Array.from(detection.descriptor);
+                document.getElementById('formFaceDescriptor').value = JSON.stringify(descriptorArray);
 
-        try {
-          const imageData = ctx.getImageData(startX, startY, sampleW, sampleH);
-          const data = imageData.data;
-          let skinPixelCount = 0;
-          let totalSampled = 0;
-          let rSum = 0, gSum = 0, bSum = 0;
+                if (!registeredDescriptor) {
+                  // First-time biometric registration mode or no prior descriptor
+                  isFaceDetected = true;
+                  liveMatchScore = 100;
+                  document.getElementById('formFaceConfidenceScore').value = 100;
+                  faceGuide.classList.add('detected');
+                  faceMatchBadge.className = 'badge bg-success-subtle text-success rounded-pill';
+                  faceMatchBadge.innerHTML = '<i class="bi bi-person-check-fill me-1"></i> Wajah Terdeteksi (Registrasi Awal)';
+                } else {
+                  // Biometric Euclidean Distance Comparison
+                  const distance = faceapi.euclideanDistance(detection.descriptor, registeredDescriptor);
+                  const matchScore = Math.max(0, Math.min(100, Math.round((1 - (distance / 0.8)) * 100)));
+                  liveMatchScore = matchScore;
+                  document.getElementById('formFaceConfidenceScore').value = matchScore;
 
-          for (let i = 0; i < data.length; i += 16) {
-            const r = data[i];
-            const g = data[i + 1];
-            const b = data[i + 2];
-            totalSampled++;
-
-            rSum += r;
-            gSum += g;
-            bSum += b;
-
-            if (r > 60 && g > 35 && b > 20 && r > g && r > b && (r - Math.min(g, b) > 15)) {
-              skinPixelCount++;
-            }
-          }
-
-          const skinRatio = skinPixelCount / totalSampled;
-          const avgR = rSum / totalSampled;
-          const avgG = gSum / totalSampled;
-          const avgB = bSum / totalSampled;
-
-          const isSolidClothing = (avgB > avgR) || (avgG > avgR * 0.95 && avgB > avgR * 0.8) || (avgR < 50);
-
-          if (skinRatio >= 0.25 && !isSolidClothing) {
-            isFaceDetected = true;
-            faceGuide.classList.add('detected');
-            faceMatchBadge.className = 'badge bg-success-subtle text-success rounded-pill';
-            faceMatchBadge.innerHTML = '<i class="bi bi-person-check-fill me-1"></i> Wajah Terdeteksi';
-          } else {
-            isFaceDetected = false;
-            faceGuide.classList.remove('detected');
-            faceMatchBadge.className = 'badge bg-warning-subtle text-warning border border-warning-subtle rounded-pill';
-            faceMatchBadge.innerHTML = '<i class="bi bi-person-exclamation me-1"></i> Arahkan Wajah ke Oval';
-          }
-        } catch (e) {
-          isFaceDetected = true;
+                  if (distance <= 0.60) {
+                    // Match! Rightful registered employee
+                    isFaceDetected = true;
+                    faceGuide.classList.add('detected');
+                    faceMatchBadge.className = 'badge bg-success-subtle text-success rounded-pill';
+                    faceMatchBadge.innerHTML = `<i class="bi bi-shield-check me-1"></i> Biometrik Cocok (${matchScore}%)`;
+                  } else {
+                    // Mismatch! Imposter / Fraud attempt!
+                    isFaceDetected = false;
+                    faceGuide.classList.remove('detected');
+                    faceMatchBadge.className = 'badge bg-danger-subtle text-danger border border-danger-subtle rounded-pill';
+                    faceMatchBadge.innerHTML = `<i class="bi bi-shield-x me-1"></i> Wajah Tidak Cocok (${matchScore}%)`;
+                  }
+                }
+              } else {
+                runFallbackSkinDetection(ctx, width, height, faceGuide, faceMatchBadge);
+              }
+            })
+            .catch(() => {
+              runFallbackSkinDetection(ctx, width, height, faceGuide, faceMatchBadge);
+            });
+        } else {
+          runFallbackSkinDetection(ctx, width, height, faceGuide, faceMatchBadge);
         }
-      }, 300);
+      }, 350);
+    }
+
+    function runFallbackSkinDetection(ctx, width, height, faceGuide, faceMatchBadge) {
+      const startX = Math.floor(width * 0.35);
+      const startY = Math.floor(height * 0.20);
+      const sampleW = Math.floor(width * 0.30);
+      const sampleH = Math.floor(height * 0.50);
+
+      try {
+        const imageData = ctx.getImageData(startX, startY, sampleW, sampleH);
+        const data = imageData.data;
+        let skinPixelCount = 0;
+        let totalSampled = 0;
+        let rSum = 0, gSum = 0, bSum = 0;
+
+        for (let i = 0; i < data.length; i += 16) {
+          const r = data[i];
+          const g = data[i + 1];
+          const b = data[i + 2];
+          totalSampled++;
+
+          rSum += r;
+          gSum += g;
+          bSum += b;
+
+          if (r > 60 && g > 35 && b > 20 && r > g && r > b && (r - Math.min(g, b) > 15)) {
+            skinPixelCount++;
+          }
+        }
+
+        const skinRatio = skinPixelCount / totalSampled;
+        const avgR = rSum / totalSampled;
+        const avgG = gSum / totalSampled;
+        const avgB = bSum / totalSampled;
+
+        const isSolidClothing = (avgB > avgR) || (avgG > avgR * 0.95 && avgB > avgR * 0.8) || (avgR < 50);
+
+        if (skinRatio >= 0.25 && !isSolidClothing) {
+          isFaceDetected = true;
+          faceGuide.classList.add('detected');
+          faceMatchBadge.className = 'badge bg-success-subtle text-success rounded-pill';
+          faceMatchBadge.innerHTML = '<i class="bi bi-person-check-fill me-1"></i> Wajah Terdeteksi';
+        } else {
+          isFaceDetected = false;
+          faceGuide.classList.remove('detected');
+          faceMatchBadge.className = 'badge bg-warning-subtle text-warning border border-warning-subtle rounded-pill';
+          faceMatchBadge.innerHTML = '<i class="bi bi-person-exclamation me-1"></i> Arahkan Wajah ke Oval';
+        }
+      } catch (e) {
+        isFaceDetected = true;
+      }
     }
 
     function startSimulatedCamera() {
@@ -450,7 +560,19 @@
 
     function submitAttendanceInstant(type) {
       if (!isSimulated && !isFaceDetected) {
-        alert("Wajah tidak terdeteksi di dalam area oval acuan! Harap posisikan wajah Anda tepat di dalam lingkaran oval sebelum menekan tombol Absen.");
+        Swal.fire({
+          title: 'Wajah Tidak Terdeteksi',
+          text: 'Harap posisikan wajah Anda tepat di dalam lingkaran oval acuan sebelum melakukan presensi.',
+          icon: 'warning',
+          confirmButtonText: 'Saya Mengerti',
+          background: '#1e293b',
+          color: '#f8fafc',
+          customClass: {
+            popup: 'border border-secondary border-opacity-25 rounded-4 shadow-lg',
+            confirmButton: 'btn btn-primary btn-sm rounded-pill px-4 shadow-sm'
+          },
+          buttonsStyling: false
+        });
         return;
       }
 
@@ -478,7 +600,19 @@
 
       const photoData = document.getElementById('formPhotoData').value;
       if (!photoData) {
-        alert("Gagal mengambil foto dari kamera.");
+        Swal.fire({
+          title: 'Gagal Mengambil Foto',
+          text: 'Gagal mengambil foto dari kamera. Harap pastikan kamera aktif dan diizinkan.',
+          icon: 'error',
+          confirmButtonText: 'Tutup',
+          background: '#1e293b',
+          color: '#f8fafc',
+          customClass: {
+            popup: 'border border-secondary border-opacity-25 rounded-4 shadow-lg',
+            confirmButton: 'btn btn-primary btn-sm rounded-pill px-4 shadow-sm'
+          },
+          buttonsStyling: false
+        });
         if (overlay) overlay.classList.add('d-none');
         return;
       }

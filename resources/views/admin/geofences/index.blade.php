@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="Absensiku Pro - Geofencing & Lokasi Kantor">
   <title>Geofencing & Lokasi | Absensiku Pro</title>
+  <link rel="icon" type="image/svg+xml" href="{{ asset('favicon.svg') }}">
 
   <link rel="stylesheet" href="{{ asset('assets/css/bootstrap.min.css') }}">
   <link rel="stylesheet" href="{{ asset('assets/vendors/bootstrap-icons/bootstrap-icons.css') }}">
@@ -238,10 +239,10 @@
                       @endif
                     </td>
                     <td class="text-end">
-                      <form action="{{ route('admin.geofences.destroy', $geo->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Hapus titik kantor {{ $geo->office_name }}?');">
+                      <form id="deleteFormGeo_{{ $geo->id }}" action="{{ route('admin.geofences.destroy', $geo->id) }}" method="POST" class="d-inline">
                         @csrf
                         @method('DELETE')
-                        <button type="submit" class="btn btn-light btn-sm text-danger" title="Hapus Lokasi"><i class="bi bi-trash"></i></button>
+                        <button type="button" class="btn btn-light btn-sm text-danger" title="Hapus Lokasi" onclick="confirmDeleteGeo('deleteFormGeo_{{ $geo->id }}', '{{ $geo->office_name }}')"><i class="bi bi-trash"></i></button>
                       </form>
                     </td>
                   </tr>
@@ -384,6 +385,32 @@
         });
       }
     });
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script>
+    function confirmDeleteGeo(formId, officeName) {
+      Swal.fire({
+        title: 'Konfirmasi Hapus Lokasi',
+        html: `Apakah Anda yakin ingin menghapus titik lokasi kantor <strong class="text-white">${officeName}</strong>?`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#ef4444',
+        cancelButtonColor: '#475569',
+        confirmButtonText: '<i class="bi bi-trash me-1"></i> Ya, Hapus',
+        cancelButtonText: 'Batal',
+        background: '#1e293b',
+        color: '#f8fafc',
+        customClass: {
+          popup: 'border border-secondary border-opacity-25 rounded-4 shadow-lg',
+          confirmButton: 'btn btn-danger btn-sm rounded-pill px-4 me-2 shadow-sm',
+          cancelButton: 'btn btn-outline-secondary btn-sm rounded-pill px-4 shadow-sm'
+        },
+        buttonsStyling: false
+      }).then((result) => {
+        if (result.isConfirmed) {
+          document.getElementById(formId).submit();
+        }
+      });
+    }
   </script>
 </body>
 </html>

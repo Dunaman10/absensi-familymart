@@ -7,8 +7,8 @@
     </button>
 
     <div class="d-none d-md-flex align-items-center gap-2 ms-3">
-      <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-3 py-2">
-        <i class="bi bi-geo-alt-fill me-1"></i> HQ Jakarta Radius Active
+      <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-3 py-1.5 small d-flex align-items-center gap-1">
+        <i class="bi bi-geo-alt-fill text-success"></i> <span>{{ \App\Models\GeofenceSetting::where('is_active', true)->value('office_name') ?? 'Kantor Utama' }} (Radius Aktif)</span>
       </span>
     </div>
 
@@ -44,13 +44,23 @@
         </div>
       </div>
 
+      <style>
+        .profile-button::after, .profile-button.dropdown-toggle::after { display: none !important; content: none !important; }
+      </style>
       <div class="dropdown">
-        <button class="profile-button dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-          <img class="avatar-img avatar-sm" src="{{ Auth::user() && Auth::user()->registered_face_photo ? asset(Auth::user()->registered_face_photo) : asset('assets/images/avatar/avatar.jpg') }}" alt="{{ Auth::user()->name ?? 'Karyawan' }}">
-          <span class="profile-name d-none d-sm-inline">{{ Auth::user()->name ?? 'Karyawan' }}</span>
+        <button class="profile-button dropdown-toggle d-flex align-items-center gap-2 border-0" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="background: transparent;">
+          @if(Auth::user() && Auth::user()->registered_face_photo)
+            <img class="avatar-img avatar-sm rounded-circle shadow-sm" src="{{ asset(Auth::user()->registered_face_photo) }}" alt="{{ Auth::user()->name }}" style="width: 32px; height: 32px; object-fit: cover;">
+          @else
+            <div class="avatar-sm rounded-circle bg-primary text-white d-flex align-items-center justify-content-center fw-bold shadow-sm" style="width:32px; height:32px; font-size: 0.85rem; flex-shrink: 0;">
+              {{ strtoupper(substr(Auth::user()->name ?? 'K', 0, 1)) }}
+            </div>
+          @endif
+          <span class="profile-name d-none d-sm-inline fw-semibold">{{ Auth::user()->name ?? 'Karyawan' }}</span>
         </button>
         <ul class="dropdown-menu dropdown-menu-end">
-          <li><a class="dropdown-item" href="{{ route('employee.history') }}"><i class="bi bi-clock-history me-2"></i>Riwayat Presensi</a></li>
+          <li><a class="dropdown-item {{ request()->routeIs('employee.profile.index') ? 'active' : '' }}" href="{{ route('employee.profile.index') }}"><i class="bi bi-person me-2"></i>Profil Saya</a></li>
+          <li><a class="dropdown-item {{ request()->routeIs('employee.history') ? 'active' : '' }}" href="{{ route('employee.history') }}"><i class="bi bi-clock-history me-2"></i>Riwayat Presensi</a></li>
           <li><hr class="dropdown-divider"></li>
           <li>
             <a class="dropdown-item text-danger" href="{{ route('login') }}" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">

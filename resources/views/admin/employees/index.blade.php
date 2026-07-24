@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="Absensiku Pro - Kelola Data Karyawan (CRUD)">
   <title>Data Karyawan | Absensiku Pro</title>
+  <link rel="icon" type="image/svg+xml" href="{{ asset('favicon.svg') }}">
 
   <link rel="stylesheet" href="{{ asset('assets/css/bootstrap.min.css') }}">
   <link rel="stylesheet" href="{{ asset('assets/vendors/bootstrap-icons/bootstrap-icons.css') }}">
@@ -176,10 +177,13 @@
                       @endif
                     </td>
                     <td class="text-end">
-                      <form action="{{ route('admin.employees.destroy', $emp->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Apakah Anda yakin ingin menghapus karyawan {{ $emp->name }}?');">
+                      <button type="button" class="btn btn-light btn-sm text-primary me-1" title="Edit Karyawan" onclick="openEditEmpModal({{ $emp->id }}, '{{ addslashes($emp->name) }}', '{{ $emp->nip }}', '{{ addslashes($emp->position ?? '') }}')">
+                        <i class="bi bi-pencil"></i>
+                      </button>
+                      <form id="deleteFormEmp_{{ $emp->id }}" action="{{ route('admin.employees.destroy', $emp->id) }}" method="POST" class="d-inline">
                         @csrf
                         @method('DELETE')
-                        <button type="submit" class="btn btn-light btn-sm text-danger" title="Hapus Karyawan"><i class="bi bi-trash"></i></button>
+                        <button type="button" class="btn btn-light btn-sm text-danger" title="Hapus Karyawan" onclick="confirmDeleteEmp('deleteFormEmp_{{ $emp->id }}', '{{ addslashes($emp->name) }}')"><i class="bi bi-trash"></i></button>
                       </form>
                     </td>
                   </tr>
@@ -221,19 +225,10 @@
               <label for="employeePosition" class="form-label">Jabatan / Tim</label>
               <input type="text" class="form-control" id="employeePosition" name="position" placeholder="Contoh: Operations Specialist">
             </div>
-            <div class="row g-2 mb-3">
-              <div class="col-md-6">
-                <label for="employeeRole" class="form-label">Role Akses</label>
-                <select class="form-select" id="employeeRole" name="role" required>
-                  <option value="user" selected>Karyawan (User)</option>
-                  <option value="admin">Administrator (HR)</option>
-                </select>
-              </div>
-              <div class="col-md-6">
-                <label class="form-label">Status Akun Awal</label>
-                <input type="text" class="form-control text-warning fw-semibold bg-body-tertiary" value="Pending Biometrik" readonly>
-                <small class="text-muted" style="font-size: 0.75rem;">Status otomatis Pending Biometrik sampai foto wajah didaftarkan.</small>
-              </div>
+            <div class="mb-3">
+              <label class="form-label">Status Akun Awal</label>
+              <input type="text" class="form-control text-warning fw-semibold bg-body-tertiary" value="Pending Biometrik" readonly>
+              <small class="text-muted" style="font-size: 0.75rem;">Status otomatis Pending Biometrik sampai foto wajah didaftarkan saat presensi pertama.</small>
             </div>
             <div class="mb-3">
               <label for="employeePassword" class="form-label">Password Login</label>
@@ -254,7 +249,79 @@
     </div>
   </div>
 
+  <!-- Modal Edit Data Karyawan -->
+  <div class="modal fade" id="editEmployeeModal" tabindex="-1" aria-labelledby="editEmployeeModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <form id="editEmployeeForm" action="" method="POST">
+          @csrf
+          @method('PUT')
+          <div class="modal-header">
+            <h5 class="modal-title fw-bold" id="editEmployeeModalLabel"><i class="bi bi-pencil-square me-2 text-primary"></i>Edit Data Karyawan</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <div class="mb-3">
+              <label for="editEmpNip" class="form-label fw-semibold">NIP (Username)</label>
+              <input type="text" class="form-control fw-mono bg-body-tertiary" id="editEmpNip" readonly disabled title="NIP tidak dapat diubah">
+            </div>
+            <div class="mb-3">
+              <label for="editEmpName" class="form-label fw-semibold">Nama Lengkap Karyawan</label>
+              <input type="text" class="form-control" id="editEmpName" name="name" required placeholder="Contoh: Ahmad Fauzi">
+            </div>
+            <div class="mb-3">
+              <label for="editEmpPosition" class="form-label fw-semibold">Jabatan / Tim</label>
+              <input type="text" class="form-control" id="editEmpPosition" name="position" placeholder="Contoh: Operations Specialist">
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Batal</button>
+            <button type="submit" class="btn btn-primary btn-sm"><i class="bi bi-check2-circle me-1"></i> Simpan Perubahan</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
   <script src="{{ asset('assets/js/bootstrap.bundle.min.js') }}"></script>
   <script src="{{ asset('assets/js/main.js') }}"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+  <script>
+    function openEditEmpModal(id, name, nip, position) {
+      document.getElementById('editEmployeeForm').action = `/admin/employees/${id}`;
+      document.getElementById('editEmpNip').value = nip;
+      document.getElementById('editEmpName').value = name;
+      document.getElementById('editEmpPosition').value = position;
+
+      var editModal = new bootstrap.Modal(document.getElementById('editEmployeeModal'));
+      editModal.show();
+    }
+
+    function confirmDeleteEmp(formId, empName) {
+      Swal.fire({
+        title: 'Konfirmasi Hapus Data',
+        html: `Apakah Anda yakin ingin menghapus akun karyawan <strong class="text-white">${empName}</strong>? Data yang dihapus tidak dapat dikembalikan.`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#ef4444',
+        cancelButtonColor: '#475569',
+        confirmButtonText: '<i class="bi bi-trash me-1"></i> Ya, Hapus',
+        cancelButtonText: 'Batal',
+        background: '#1e293b',
+        color: '#f8fafc',
+        customClass: {
+          popup: 'border border-secondary border-opacity-25 rounded-4 shadow-lg',
+          confirmButton: 'btn btn-danger btn-sm rounded-pill px-4 me-2 shadow-sm',
+          cancelButton: 'btn btn-outline-secondary btn-sm rounded-pill px-4 shadow-sm'
+        },
+        buttonsStyling: false
+      }).then((result) => {
+        if (result.isConfirmed) {
+          document.getElementById(formId).submit();
+        }
+      });
+    }
+  </script>
 </body>
 </html>
