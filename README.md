@@ -52,7 +52,7 @@ Pastikan komputer Anda sudah terinstal:
 1. **Clone Repository**
    Buka terminal/command prompt dan jalankan perintah berikut:
    ```bash
-   git clone <URL_REPOSITORY_ANDA>
+   git clone https://github.com/Dunaman10/absensiku-pro.git
    cd absensiku_pro
    ```
 
