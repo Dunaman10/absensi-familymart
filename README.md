@@ -1,58 +1,128 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Absensiku Pro 📸📍
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+**Absensiku Pro** adalah sistem presensi modern berbasis web yang dilengkapi dengan teknologi **Deteksi Biometrik Wajah (Face Recognition)** dan **Validasi Lokasi (Geofencing)**. Aplikasi ini dibangun dengan Laravel dan bertujuan untuk mencegah kecurangan dalam absensi karyawan dengan memastikan bahwa karyawan yang melakukan presensi berada di lokasi kantor yang benar dan memverifikasi wajah mereka secara real-time.
 
-## About Laravel
+---
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## 🌟 Fitur Utama
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+### 🏢 Untuk Admin (HR / Management)
+- **Dashboard Analitik**: Pantau ringkasan presensi harian secara real-time.
+- **Manajemen Karyawan**: Tambah, edit, hapus, dan lihat data karyawan beserta status pendaftaran biometrik (aktif / pending).
+- **Log Presensi Realtime**: Lihat riwayat presensi semua karyawan lengkap dengan foto hasil scan, koordinat lokasi, waktu presensi, dan status (Masuk / Pulang).
+- **Pengaturan Geofencing**: Tentukan koordinat titik tengah kantor (Latitude & Longitude) serta radius toleransi jarak maksimal untuk karyawan bisa melakukan presensi.
+- **Profil Admin**: Pengaturan profil (nama, avatar maksimal 1MB) dan kata sandi.
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+### 👤 Untuk Karyawan (User)
+- **Kamera Presensi Biometrik**: 
+  - Registrasi biometrik pada saat pertama kali presensi.
+  - Verifikasi wajah *real-time* dengan teknologi **Face-API.js** (AI Biometrics) saat melakukan absen Masuk & Pulang.
+  - Liveness detection & fallback skin-color detection.
+- **Validasi Lokasi (Geofence)**: Presensi hanya dapat dilakukan jika jarak karyawan ke kantor sesuai dengan radius yang ditetapkan Admin.
+- **Riwayat Presensi Saya**: Memantau catatan riwayat waktu kerja.
+- **Profil Karyawan**: Mengubah detail pribadi, foto biometrik (dengan batasan ukuran 1MB), dan password.
 
-## Learning Laravel
+---
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+## 🛠️ Teknologi yang Digunakan
 
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+- **Backend**: [Laravel](https://laravel.com/) (PHP)
+- **Frontend**: Blade Templating, HTML5, Vanilla JavaScript, [Bootstrap 5](https://getbootstrap.com/)
+- **Biometrik**: [face-api.js](https://github.com/vladmandic/face-api) (TensorFlow.js berbasis browser)
+- **Database**: MySQL / SQLite (Sesuai Konfigurasi Laravel)
+- **Styling Tambahan**: Custom CSS Modern (Dark & Light Mode Toggle), Bootstrap Icons
+- **Notifikasi/Alert**: [SweetAlert2](https://sweetalert2.github.io/)
 
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
+---
 
-## Agentic Development
+## 🚀 Cara Instalasi ke Local (Local Development)
 
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
+Ikuti panduan berikut dari nol hingga aplikasi berhasil dijalankan di komputer lokal Anda:
 
-```bash
-composer require laravel/boost --dev
+### 1. Persyaratan Sistem
+Pastikan komputer Anda sudah terinstal:
+- **PHP** (>= 8.2 direkomendasikan)
+- **Composer** (Package Manager PHP)
+- **MySQL / MariaDB** (atau database lokal yang mendukung Laravel, seperti SQLite)
+- **Git**
+- Browser modern (Chrome/Edge/Firefox) yang mendukung API Kamera (`navigator.mediaDevices.getUserMedia`).
 
-php artisan boost:install
-```
+### 2. Langkah Instalasi
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+1. **Clone Repository**
+   Buka terminal/command prompt dan jalankan perintah berikut:
+   ```bash
+   git clone <URL_REPOSITORY_ANDA>
+   cd absensiku_pro
+   ```
 
-## Contributing
+2. **Install Dependencies PHP**
+   Unduh semua library framework Laravel melalui Composer:
+   ```bash
+   composer install
+   ```
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+3. **Konfigurasi Environment (.env)**
+   Copy file `.env.example` menjadi `.env`:
+   ```bash
+   cp .env.example .env
+   ```
+   Buka file `.env` dan atur koneksi database Anda. Contoh untuk MySQL:
+   ```env
+   DB_CONNECTION=mysql
+   DB_HOST=127.0.0.1
+   DB_PORT=3306
+   DB_DATABASE=absensiku_pro
+   DB_USERNAME=root
+   DB_PASSWORD=
+   ```
 
-## Code of Conduct
+4. **Generate Application Key**
+   Buat application key unik untuk enkripsi sesi Laravel:
+   ```bash
+   php artisan key:generate
+   ```
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+5. **Migrasi Database & Seeder**
+   Buat struktur tabel ke dalam database beserta data awal (Default Admin & Pengaturan Geofence):
+   ```bash
+   php artisan migrate --seed
+   ```
+   *(Pastikan Anda membuat database kosong bernama `absensiku_pro` terlebih dahulu di MySQL/phpMyAdmin sebelum perintah ini dijalankan)*
 
-## Security Vulnerabilities
+6. **Link Storage (Upload Foto)**
+   Agar foto profil karyawan dapat diakses dari browser, hubungkan folder storage:
+   ```bash
+   php artisan storage:link
+   ```
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+7. **Jalankan Aplikasi**
+   Nyalakan server development bawaan Laravel:
+   ```bash
+   php artisan serve
+   ```
+   Aplikasi Anda kini berjalan di `http://127.0.0.1:8000`.
 
-## License
+---
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+## 🔑 Akses Login Default
+
+Setelah proses migrasi dan seeder selesai, Anda dapat login menggunakan akun berikut:
+
+**Admin HR:**
+- **Email/NIP:** `admin@absensiku.com`
+- **Password:** `password`
+
+*(Anda bisa mendaftarkan akun karyawan (User) baru melalui halaman Dashboard Admin).*
+
+---
+
+## ⚠️ Catatan Penting Saat Development
+
+- **Izin Akses Kamera dan Lokasi**: Saat mengakses halaman presensi (Scan Karyawan), browser akan meminta izin (Prompt) untuk menggunakan **Kamera** dan **Lokasi (GPS)**. Anda harus mengizinkannya agar validasi biometrik & geofencing bisa bekerja.
+- **Konteks Keamanan Browser (HTTPS)**: API Kamera web (WebRTC/`getUserMedia`) dan API Lokasi (`navigator.geolocation`) biasanya membutuhkan jaringan aman **HTTPS**, KECUALI jika diakses dari `localhost` atau `127.0.0.1`. Jika Anda mengakses lewat IP jaringan (contoh: `192.168.x.x`), fitur kamera mungkin akan di-blokir oleh browser. Solusinya, gunakan *port-forwarding* lokal (seperti ngrok) atau instal SSL lokal.
+- **Ukuran File Upload**: Upload foto biometrik karyawan sudah dikunci maksimal **1 MB** pada Frontend maupun Backend. 
+
+---
+
+Dikembangkan dengan ❤️ untuk modernisasi presensi karyawan.
