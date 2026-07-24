@@ -110,7 +110,7 @@ Pastikan komputer Anda sudah terinstal:
 Setelah proses migrasi dan seeder selesai, Anda dapat login menggunakan akun berikut:
 
 **Admin HR:**
-- **Email/NIP:** `admin@absensiku.com`
+- **NIP:** `ADMIN001`
 - **Password:** `password`
 
 *(Anda bisa mendaftarkan akun karyawan (User) baru melalui halaman Dashboard Admin).*
