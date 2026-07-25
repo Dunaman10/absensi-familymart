@@ -304,6 +304,19 @@
       });
     });
   });
+
+  // Register PWA Service Worker
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function () {
+      navigator.serviceWorker.register('/sw.js')
+        .then(function (registration) {
+          console.log('PWA ServiceWorker registered with scope: ', registration.scope);
+        })
+        .catch(function (error) {
+          console.log('PWA ServiceWorker registration failed: ', error);
+        });
+    });
+  }
 })();
 
 

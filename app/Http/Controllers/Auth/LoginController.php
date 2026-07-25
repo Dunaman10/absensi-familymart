@@ -13,6 +13,12 @@ class LoginController extends Controller
      */
     public function showLoginForm()
     {
+        if (Auth::check()) {
+            return Auth::user()->role === 'admin'
+                ? redirect()->route('admin.dashboard')
+                : redirect()->route('employee.dashboard');
+        }
+
         return view('auth.login');
     }
 
@@ -21,6 +27,12 @@ class LoginController extends Controller
      */
     public function login(Request $request)
     {
+        if (Auth::check()) {
+            return Auth::user()->role === 'admin'
+                ? redirect()->route('admin.dashboard')
+                : redirect()->route('employee.dashboard');
+        }
+
         $credentials = $request->validate([
             'nip' => ['required', 'string'],
             'password' => ['required'],

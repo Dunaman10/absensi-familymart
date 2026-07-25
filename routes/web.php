@@ -25,7 +25,7 @@ Route::post('/forgot-password', [ForgotPasswordController::class, 'sendOtp'])->n
 Route::post('/verify-otp', [ForgotPasswordController::class, 'verifyOtp'])->name('password.verify-otp');
 Route::post('/reset-password', [ForgotPasswordController::class, 'resetPassword'])->name('password.update');
 // Route Admin Workspace (Protected)
-Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
+Route::prefix('admin')->name('admin.')->middleware(['auth', 'role.admin'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/employees', [EmployeeController::class, 'index'])->name('employees.index');
     Route::get('/employees/export', [EmployeeController::class, 'export'])->name('employees.export');
@@ -44,7 +44,7 @@ Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
 });
 
 // Route Employee Workspace (Protected)
-Route::prefix('employee')->name('employee.')->middleware('auth')->group(function () {
+Route::prefix('employee')->name('employee.')->middleware(['auth', 'role.employee'])->group(function () {
     Route::get('/dashboard', [EmployeeDashboardController::class, 'index'])->name('dashboard');
     Route::get('/attendance/scan', [EmployeeAttendanceController::class, 'scan'])->name('attendance.scan');
     Route::post('/attendance/store', [EmployeeAttendanceController::class, 'store'])->name('attendance.store');
