@@ -39,9 +39,20 @@ class LoginController extends Controller
         ]);
 
         if (Auth::attempt($credentials, $request->boolean('remember'))) {
+            $user = Auth::user();
+
+            if ($user->account_status === 'Non-Aktif') {
+                Auth::logout();
+                $request->session()->invalidate();
+                $request->session()->regenerateToken();
+
+                return back()->withErrors([
+                    'nip' => 'Akun Anda berstatus Non-Aktif. Harap hubungi Tim Administrator / HR.',
+                ])->onlyInput('nip');
+            }
+
             $request->session()->regenerate();
 
-            $user = Auth::user();
             if ($user->role === 'admin') {
                 return redirect()->intended('/admin/dashboard');
             }

@@ -15,8 +15,18 @@ class EmployeeMiddleware
      */
     public function handle(Request $request, Closure $next): Response
     {
-        if (!Auth::check()) {
+        if (! Auth::check()) {
             return redirect()->route('login');
+        }
+
+        if (Auth::user()->account_status === 'Non-Aktif') {
+            Auth::logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+
+            return redirect()->route('login')->withErrors([
+                'nip' => 'Akun Anda telah dinonaktifkan oleh HR.',
+            ]);
         }
 
         if (Auth::user()->role === 'admin') {

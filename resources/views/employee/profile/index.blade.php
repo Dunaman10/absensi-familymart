@@ -153,12 +153,12 @@
 
                     <!-- Upload Foto Profile Section -->
                     <div class="col-12 mt-4">
-                      <label class="form-label fw-semibold" for="profilePhotoInput">Upload Foto Profil / Biometrik Baru</label>
+                      <label class="form-label fw-semibold" for="profilePhotoInput">Upload Foto Profil Baru</label>
                       <div class="input-group">
                         <input type="file" class="form-control" id="profilePhotoInput" name="profile_photo" accept="image/jpeg,image/png,image/jpg,image/webp" onchange="previewUploadImage(this)">
                         <label class="input-group-text" for="profilePhotoInput"><i class="bi bi-upload"></i></label>
                       </div>
-                      <small class="text-muted mt-1 d-block" style="font-size: 0.78rem;">Format didukung: JPG, PNG, WEBP (Maksimal 1MB).</small>
+                      <small class="text-muted mt-1 d-block" style="font-size: 0.78rem;">Format didukung: JPG, PNG, WEBP (Maksimal 1MB). Foto ini hanya digunakan sebagai tampilan foto profil akun dan tidak mengubah foto acuan biometrik presensi Anda.</small>
                     </div>
                   </div>
 

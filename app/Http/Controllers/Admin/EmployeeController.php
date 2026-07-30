@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
-use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class EmployeeController extends Controller
 {
@@ -28,10 +27,10 @@ class EmployeeController extends Controller
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'LIKE', "%{$search}%")
-                  ->orWhere('nip', 'LIKE', "%{$search}%")
-                  ->orWhere('position', 'LIKE', "%{$search}%")
-                  ->orWhere('role', 'LIKE', "%{$search}%")
-                  ->orWhere('account_status', 'LIKE', "%{$search}%");
+                    ->orWhere('nip', 'LIKE', "%{$search}%")
+                    ->orWhere('position', 'LIKE', "%{$search}%")
+                    ->orWhere('role', 'LIKE', "%{$search}%")
+                    ->orWhere('account_status', 'LIKE', "%{$search}%");
             });
         }
 
@@ -53,36 +52,36 @@ class EmployeeController extends Controller
      */
     public function export(Request $request)
     {
-        $fileName = 'Data_Karyawan_AbsensikuPro_' . date('Y-m-d_H-i') . '.csv';
+        $fileName = 'Data_Karyawan_AbsensikuPro_'.date('Y-m-d_H-i').'.csv';
 
         $query = User::query();
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'LIKE', "%{$search}%")
-                  ->orWhere('nip', 'LIKE', "%{$search}%")
-                  ->orWhere('position', 'LIKE', "%{$search}%");
+                    ->orWhere('nip', 'LIKE', "%{$search}%")
+                    ->orWhere('position', 'LIKE', "%{$search}%");
             });
         }
 
         $employees = $query->latest()->get();
 
         $headers = [
-            "Content-Type" => "text/csv; charset=UTF-8",
-            "Content-Disposition" => "attachment; filename=\"$fileName\"",
-            "Pragma" => "no-cache",
-            "Cache-Control" => "must-revalidate, post-check=0, pre-check=0",
-            "Expires" => "0"
+            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => "attachment; filename=\"$fileName\"",
+            'Pragma' => 'no-cache',
+            'Cache-Control' => 'must-revalidate, post-check=0, pre-check=0',
+            'Expires' => '0',
         ];
 
         $callback = function () use ($employees) {
             $file = fopen('php://output', 'w');
-            
+
             // Write UTF-8 BOM for Excel compatibility
-            fputs($file, "\xEF\xBB\xBF");
+            fwrite($file, "\xEF\xBB\xBF");
 
             // Tell Microsoft Excel explicitly to use semicolon delimiter for separate columns
-            fputs($file, "sep=;\n");
+            fwrite($file, "sep=;\n");
 
             // Header Row (Semicolon separated for Excel columns)
             fputcsv($file, [
@@ -92,7 +91,7 @@ class EmployeeController extends Controller
                 'Jabatan / Tim',
                 'Role Akses',
                 'Status Akun',
-                'Tanggal Terdaftar'
+                'Tanggal Terdaftar',
             ], ';');
 
             // Data Rows
@@ -104,7 +103,7 @@ class EmployeeController extends Controller
                     $emp->position ?? '-',
                     $emp->role === 'admin' ? 'Administrator HR' : 'Karyawan',
                     $emp->account_status,
-                    $emp->created_at ? $emp->created_at->format('d/m/Y H:i') : '-'
+                    $emp->created_at ? $emp->created_at->format('d/m/Y H:i') : '-',
                 ], ';');
             }
 
@@ -153,6 +152,7 @@ class EmployeeController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|email|max:255|unique:users,email,'.$id,
             'position' => 'nullable|string|max:255',
+            'account_status' => 'nullable|in:Aktif,Pending Biometrik,Non-Aktif',
             'password' => 'nullable|string|min:6',
         ], [
             'name.required' => 'Nama karyawan wajib diisi.',
@@ -162,6 +162,9 @@ class EmployeeController extends Controller
         $user->name = $validated['name'];
         $user->email = $validated['email'];
         $user->position = $validated['position'] ?? null;
+        if ($request->filled('account_status')) {
+            $user->account_status = $validated['account_status'];
+        }
         if ($request->filled('password')) {
             $user->password = Hash::make($validated['password']);
         }

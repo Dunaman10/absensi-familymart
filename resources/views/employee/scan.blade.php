@@ -259,7 +259,7 @@
     <input type="hidden" name="notes" id="formNotes">
   </form>
 
-  @if($user->registered_face_photo)
+  @if($user->account_status === 'Aktif' && $user->registered_face_photo)
     <img id="registeredFaceRefImg" src="{{ asset($user->registered_face_photo) }}" class="d-none" crossorigin="anonymous">
   @endif
 
@@ -387,7 +387,7 @@
         ctx.drawImage(video, 0, 0, width, height);
 
         if (faceApiLoaded) {
-          faceapi.detectSingleFace(video, new faceapi.TinyFaceDetectorOptions({ inputSize: 224, scoreThreshold: 0.4 }))
+          faceapi.detectSingleFace(video, new faceapi.TinyFaceDetectorOptions({ inputSize: 320, scoreThreshold: 0.3 }))
             .withFaceLandmarks()
             .withFaceDescriptor()
             .then(detection => {

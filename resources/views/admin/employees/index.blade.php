@@ -186,7 +186,7 @@
                       @endif
                     </td>
                     <td class="text-end">
-                      <button type="button" class="btn btn-light btn-sm text-primary me-1" title="Edit Karyawan" onclick="openEditEmpModal({{ $emp->id }}, '{{ addslashes($emp->name) }}', '{{ $emp->nip }}', '{{ addslashes($emp->position ?? '') }}', '{{ addslashes($emp->email ?? '') }}')">
+                      <button type="button" class="btn btn-light btn-sm text-primary me-1" title="Edit Karyawan" onclick="openEditEmpModal({{ $emp->id }}, '{{ addslashes($emp->name) }}', '{{ $emp->nip }}', '{{ addslashes($emp->position ?? '') }}', '{{ addslashes($emp->email ?? '') }}', '{{ $emp->account_status }}')">
                         <i class="bi bi-pencil"></i>
                       </button>
                       <form id="deleteFormEmp_{{ $emp->id }}" action="{{ route('admin.employees.destroy', $emp->id) }}" method="POST" class="d-inline">
@@ -311,6 +311,14 @@
               <input type="text" class="form-control" id="editEmpPosition" name="position" placeholder="Contoh: Operations Specialist">
             </div>
             <div class="mb-3">
+              <label for="editEmpStatus" class="form-label fw-semibold">Status Akun</label>
+              <select class="form-select" id="editEmpStatus" name="account_status" required>
+                <option value="Aktif">Aktif</option>
+                <option value="Pending Biometrik">Pending Biometrik</option>
+                <option value="Non-Aktif">Non-Aktif</option>
+              </select>
+            </div>
+            <div class="mb-3">
               <label for="editEmpPassword" class="form-label fw-semibold">Reset Password Baru (Opsional)</label>
               <div class="input-group">
                 <input type="password" class="form-control" id="editEmpPassword" name="password" placeholder="••••••••" minlength="6">
@@ -335,12 +343,15 @@
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
   <script>
-    function openEditEmpModal(id, name, nip, position, email) {
+    function openEditEmpModal(id, name, nip, position, email, status) {
       document.getElementById('editEmployeeForm').action = `/admin/employees/${id}`;
       document.getElementById('editEmpNip').value = nip;
       document.getElementById('editEmpName').value = name;
       document.getElementById('editEmpEmail').value = email;
       document.getElementById('editEmpPosition').value = position;
+      if (document.getElementById('editEmpStatus')) {
+        document.getElementById('editEmpStatus').value = status || 'Aktif';
+      }
       if (document.getElementById('editEmpPassword')) {
         document.getElementById('editEmpPassword').value = '';
       }
