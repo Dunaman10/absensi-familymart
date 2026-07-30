@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\Shift;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
@@ -169,13 +170,21 @@ class UserSeeder extends Seeder
 
         $defaultPassword = Hash::make('password');
 
-        foreach ($employees as $emp) {
+        $pagiShift = Shift::where('name', 'LIKE', '%Pagi%')->first();
+        $siangShift = Shift::where('name', 'LIKE', '%Siang%')->first();
+        $malamShift = Shift::where('name', 'LIKE', '%Malam%')->first();
+
+        $shifts = [$pagiShift?->id, $siangShift?->id, $malamShift?->id];
+
+        foreach ($employees as $index => $emp) {
+            $shiftId = $shifts[$index % 3] ?? null;
             User::updateOrCreate(
                 ['nip' => $emp['nip']],
                 [
                     'name' => $emp['name'],
                     'email' => $emp['email'],
                     'position' => $emp['position'],
+                    'shift_id' => $shiftId,
                     'password' => $defaultPassword,
                     'role' => $emp['role'],
                     'account_status' => $emp['account_status'],

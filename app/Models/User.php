@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -22,6 +23,7 @@ class User extends Authenticatable
         'name',
         'email',
         'position',
+        'shift_id',
         'password',
         'role',
         'account_status',
@@ -56,6 +58,14 @@ class User extends Authenticatable
     }
 
     /**
+     * Relationship to Shift.
+     */
+    public function shift(): BelongsTo
+    {
+        return $this->belongsTo(Shift::class);
+    }
+
+    /**
      * Relationship to AttendanceLogs.
      */
     public function attendanceLogs(): HasMany
@@ -86,19 +96,18 @@ class User extends Authenticatable
     {
         $year = date('Y');
         $prefix = "EMP{$year}";
-        
+
         $latestUser = self::where('role', 'user')
             ->where('nip', 'LIKE', "{$prefix}%")
             ->orderBy('nip', 'desc')
             ->first();
 
-        if ($latestUser && preg_match('/' . $prefix . '(\d+)/', $latestUser->nip, $matches)) {
-            $nextNum = (int)$matches[1] + 1;
+        if ($latestUser && preg_match('/'.$prefix.'(\d+)/', $latestUser->nip, $matches)) {
+            $nextNum = (int) $matches[1] + 1;
         } else {
             $nextNum = 1;
         }
 
-        return $prefix . str_pad($nextNum, 3, '0', STR_PAD_LEFT);
+        return $prefix.str_pad($nextNum, 3, '0', STR_PAD_LEFT);
     }
 }
-

@@ -19,6 +19,9 @@ class AttendanceLog extends Model
         'time',
         'type',
         'status',
+        'approval_status',
+        'approval_notes',
+        'approved_by',
         'lat',
         'lng',
         'distance_from_office',
@@ -58,5 +61,13 @@ class AttendanceLog extends Model
     public function geofence(): BelongsTo
     {
         return $this->belongsTo(GeofenceSetting::class, 'geofence_id');
+    }
+
+    /**
+     * Relationship to Approver User.
+     */
+    public function approver(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'approved_by');
     }
 }

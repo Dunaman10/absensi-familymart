@@ -18,6 +18,10 @@
       <span class="nav-icon"><i class="bi bi-people" aria-hidden="true"></i></span>
       <span class="nav-text">Data Karyawan</span>
     </a>
+    <a class="nav-link {{ request()->routeIs('admin.shifts.*') ? 'active' : '' }}" href="{{ route('admin.shifts.index') }}">
+      <span class="nav-icon"><i class="bi bi-clock-history" aria-hidden="true"></i></span>
+      <span class="nav-text">Jadwal & Shift Kerja</span>
+    </a>
     <a class="nav-link {{ request()->routeIs('admin.attendance_logs.*') ? 'active' : '' }}" href="{{ route('admin.attendance_logs.index') }}">
       <span class="nav-icon"><i class="bi bi-calendar-check" aria-hidden="true"></i></span>
       <span class="nav-text">Log Presensi</span>

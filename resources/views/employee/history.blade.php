@@ -67,6 +67,7 @@
                       <th class="ps-4">Tanggal & Hari</th>
                       <th>Tipe & Waktu</th>
                       <th>Status Kehadiran</th>
+                      <th>Validasi Alasan HR</th>
                       <th class="pe-4 text-center">Aksi</th>
                     </tr>
                   </thead>
@@ -92,12 +93,24 @@
                           <span class="badge bg-secondary text-white px-2 py-1 rounded-pill">{{ $log->status }}</span>
                         @endif
                       </td>
+                      <td>
+                        @if($log->approval_status == 'APPROVED')
+                          <span class="badge bg-success text-white px-2 py-1 rounded-pill"><i class="bi bi-check-lg me-1"></i>Disetujui</span>
+                        @elseif($log->approval_status == 'REJECTED')
+                          <span class="badge bg-danger text-white px-2 py-1 rounded-pill"><i class="bi bi-x-lg me-1"></i>Ditolak</span>
+                        @else
+                          <span class="badge bg-warning text-dark px-2 py-1 rounded-pill"><i class="bi bi-hourglass-split me-1"></i>Pending HR</span>
+                        @endif
+                      </td>
                       <td class="pe-4 text-center">
                         <button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-3" onclick="showEmployeeDetailModal({{ json_encode([
                           'date' => \Carbon\Carbon::parse($log->date)->translatedFormat('d F Y'),
                           'time' => $log->time,
                           'type' => $log->type,
                           'status' => $log->status,
+                          'approval_status' => $log->approval_status,
+                          'approval_notes' => $log->approval_notes,
+                          'approver_name' => $log->approver->name ?? 'Admin HR',
                           'is_outside_radius' => $log->is_outside_radius,
                           'distance' => $log->distance_from_office,
                           'lat' => $log->lat,
@@ -176,9 +189,13 @@
               <small class="d-block text-muted mt-1" id="empDetailOffice">-</small>
             </div>
           </div>
-          <div class="mb-4">
-            <small class="text-muted d-block mb-1">Catatan Anda</small>
+          <div class="mb-3">
+            <small class="text-muted d-block mb-1">Catatan / Alasan Anda</small>
             <div class="p-2 bg-body-secondary rounded text-body border" id="empDetailNotes" style="font-size: 0.85rem;">-</div>
+          </div>
+          <div class="mb-4">
+            <small class="text-muted d-block mb-1">Status Validasi & Balasan HR/Admin</small>
+            <div class="p-2 rounded border" id="empDetailApprovalBox" style="font-size: 0.85rem;">-</div>
           </div>
           <div>
             <small class="text-muted d-block mb-2 text-center">Foto Bukti Presensi</small>
@@ -221,6 +238,19 @@
       document.getElementById('empDetailOffice').textContent = data.office;
       
       document.getElementById('empDetailNotes').textContent = data.notes ? data.notes : '-';
+      
+      // Render Status Validasi & Balasan HR
+      const approvalBox = document.getElementById('empDetailApprovalBox');
+      if (data.approval_status === 'APPROVED') {
+        approvalBox.className = 'p-2 bg-success-subtle text-success border border-success-subtle rounded';
+        approvalBox.innerHTML = `<strong><i class="bi bi-check-circle me-1"></i>Disetujui oleh ${data.approver_name}</strong><br><span class="text-body small">${data.approval_notes || 'Alasan diterima.'}</span>`;
+      } else if (data.approval_status === 'REJECTED') {
+        approvalBox.className = 'p-2 bg-danger-subtle text-danger border border-danger-subtle rounded';
+        approvalBox.innerHTML = `<strong><i class="bi bi-x-circle me-1"></i>Ditolak oleh ${data.approver_name}</strong><br><span class="text-body small">${data.approval_notes || 'Alasan tidak diterima.'}</span>`;
+      } else {
+        approvalBox.className = 'p-2 bg-warning-subtle text-warning-emphasis border border-warning-subtle rounded';
+        approvalBox.innerHTML = `<strong><i class="bi bi-hourglass-split me-1"></i>Menunggu Verifikasi HR</strong><br><span class="text-body small">Catatan alasan Anda sedang ditinjau oleh Admin HRIS.</span>`;
+      }
       
       const photoEl = document.getElementById('empDetailPhotoImg');
       if (data.photo) {

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Shift;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -21,7 +22,7 @@ class EmployeeController extends Controller
 
         $nextNip = User::generateNextNip();
 
-        $query = User::query();
+        $query = User::with('shift');
 
         if ($request->filled('search')) {
             $search = $request->search;
@@ -36,6 +37,7 @@ class EmployeeController extends Controller
 
         $perPage = $request->input('per_page', 5);
         $employees = $query->latest()->paginate($perPage)->withQueryString();
+        $shifts = Shift::all();
 
         return view('admin.employees.index', compact(
             'totalEmployees',
@@ -43,7 +45,52 @@ class EmployeeController extends Controller
             'pendingBiometric',
             'inactiveEmployees',
             'nextNip',
-            'employees'
+            'employees',
+            'shifts'
+        ));
+    }
+
+    /**
+     * Display detailed attendance tracking & payroll summary for a specific employee.
+     */
+    public function show(Request $request, $id)
+    {
+        $employee = User::with('shift')->findOrFail($id);
+
+        $dateFrom = $request->input('date_from', now()->startOfMonth()->toDateString());
+        $dateTo = $request->input('date_to', now()->endOfMonth()->toDateString());
+
+        $logsQuery = $employee->attendanceLogs()
+            ->whereBetween('date', [$dateFrom, $dateTo])
+            ->with('geofence', 'approver');
+
+        $logs = (clone $logsQuery)->latest('date')->latest('time')->get();
+
+        // Metrics for Payroll / Tracking
+        $totalMasuk = (clone $logsQuery)->where('type', 'MASUK')->count();
+        $totalTepatWaktu = (clone $logsQuery)->where('type', 'MASUK')->where('status', 'TEPAT_WAKTU')->count();
+        $totalTerlambat = (clone $logsQuery)->where('type', 'MASUK')->where('status', 'TERLAMBAT')->count();
+        $terlambatDisetujui = (clone $logsQuery)->where('type', 'MASUK')->where('status', 'TERLAMBAT')->where('approval_status', 'APPROVED')->count();
+        $terlambatDitolak = (clone $logsQuery)->where('type', 'MASUK')->where('status', 'TERLAMBAT')->where('approval_status', 'REJECTED')->count();
+        $terlambatPending = (clone $logsQuery)->where('type', 'MASUK')->where('status', 'TERLAMBAT')->where('approval_status', 'PENDING')->count();
+        $totalPulangCepat = (clone $logsQuery)->where('type', 'PULANG')->where('status', 'PULANG_CEPAT')->count();
+
+        // Calculated Valid Days for Payroll (Tepat Waktu + Terlambat Disetujui)
+        $validDaysForPayroll = $totalTepatWaktu + $terlambatDisetujui;
+
+        return view('admin.employees.show', compact(
+            'employee',
+            'logs',
+            'dateFrom',
+            'dateTo',
+            'totalMasuk',
+            'totalTepatWaktu',
+            'totalTerlambat',
+            'terlambatDisetujui',
+            'terlambatDitolak',
+            'terlambatPending',
+            'totalPulangCepat',
+            'validDaysForPayroll'
         ));
     }
 
@@ -122,6 +169,7 @@ class EmployeeController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email|max:255',
             'position' => 'nullable|string|max:255',
+            'shift_id' => 'nullable|exists:shifts,id',
             'password' => 'required|string|min:6',
         ]);
 
@@ -132,6 +180,7 @@ class EmployeeController extends Controller
             'name' => $validated['name'],
             'email' => $validated['email'],
             'position' => $validated['position'] ?? null,
+            'shift_id' => $validated['shift_id'] ?? null,
             'password' => Hash::make($validated['password']),
             'role' => 'user',
             'account_status' => 'Pending Biometrik',
@@ -142,7 +191,7 @@ class EmployeeController extends Controller
     }
 
     /**
-     * Update employee data (Name & Position only).
+     * Update employee data (Name, Position, Shift, & Status).
      */
     public function update(Request $request, $id)
     {
@@ -152,6 +201,7 @@ class EmployeeController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|email|max:255|unique:users,email,'.$id,
             'position' => 'nullable|string|max:255',
+            'shift_id' => 'nullable|exists:shifts,id',
             'account_status' => 'nullable|in:Aktif,Pending Biometrik,Non-Aktif',
             'password' => 'nullable|string|min:6',
         ], [
@@ -162,6 +212,7 @@ class EmployeeController extends Controller
         $user->name = $validated['name'];
         $user->email = $validated['email'];
         $user->position = $validated['position'] ?? null;
+        $user->shift_id = $validated['shift_id'] ?? null;
         if ($request->filled('account_status')) {
             $user->account_status = $validated['account_status'];
         }

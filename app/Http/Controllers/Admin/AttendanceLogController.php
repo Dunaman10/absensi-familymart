@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\AttendanceLog;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 
 class AttendanceLogController extends Controller
@@ -13,7 +14,12 @@ class AttendanceLogController extends Controller
      */
     public function index(Request $request)
     {
-        $query = AttendanceLog::with('user', 'geofence');
+        $query = AttendanceLog::with('user', 'geofence', 'approver');
+
+        // Filter approval_status if specified
+        if ($request->filled('approval_status')) {
+            $query->where('approval_status', $request->approval_status);
+        }
 
         // Search Filter (Karyawan Name, NIP, Status, Type)
         if ($request->filled('search')) {
@@ -21,11 +27,12 @@ class AttendanceLogController extends Controller
             $query->where(function ($q) use ($search) {
                 $q->whereHas('user', function ($u) use ($search) {
                     $u->where('name', 'LIKE', "%{$search}%")
-                      ->orWhere('nip', 'LIKE', "%{$search}%")
-                      ->orWhere('position', 'LIKE', "%{$search}%");
+                        ->orWhere('nip', 'LIKE', "%{$search}%")
+                        ->orWhere('position', 'LIKE', "%{$search}%");
                 })
-                ->orWhere('type', 'LIKE', "%{$search}%")
-                ->orWhere('status', 'LIKE', "%{$search}%");
+                    ->orWhere('type', 'LIKE', "%{$search}%")
+                    ->orWhere('status', 'LIKE', "%{$search}%")
+                    ->orWhere('notes', 'LIKE', "%{$search}%");
             });
         }
 
@@ -37,50 +44,56 @@ class AttendanceLogController extends Controller
             $query->whereDate('date', '<=', $request->date_to);
         }
 
-        // Calculate summary metrics based on filtered query or overall
+        // Calculate summary metrics
         $totalLogs = AttendanceLog::count();
         $checkInLogs = AttendanceLog::where('type', 'MASUK')->count();
         $checkOutLogs = AttendanceLog::where('type', 'PULANG')->count();
         $outOfRadiusLogs = AttendanceLog::where('is_outside_radius', true)->count();
+        $pendingReasonLogs = AttendanceLog::where('approval_status', 'PENDING')->count();
 
         $perPage = $request->input('per_page', 5);
         $logs = $query->latest('date')->latest('time')->paginate($perPage)->withQueryString();
-
-        if ($request->wantsJson() || $request->has('json')) {
-            return response()->json([
-                'totalLogs' => $totalLogs,
-                'checkInLogs' => $checkInLogs,
-                'checkOutLogs' => $checkOutLogs,
-                'outOfRadiusLogs' => $outOfRadiusLogs,
-                'logs' => $logs->map(function ($log) {
-                    return [
-                        'id' => $log->id,
-                        'user_name' => $log->user->name ?? 'Karyawan',
-                        'nip' => $log->user->nip ?? '-',
-                        'date' => \Carbon\Carbon::parse($log->date)->translatedFormat('d M Y'),
-                        'time' => $log->time,
-                        'type' => $log->type,
-                        'status' => $log->status,
-                        'face_confidence' => $log->face_confidence_score,
-                        'distance' => $log->distance_from_office,
-                        'is_outside_radius' => $log->is_outside_radius,
-                        'lat' => $log->lat,
-                        'lng' => $log->lng,
-                        'photo_url' => $log->photo_path ? asset($log->photo_path) : null,
-                        'notes' => $log->notes,
-                        'registered_face_url' => ($log->user && $log->user->registered_face_photo) ? asset($log->user->registered_face_photo) : null,
-                    ];
-                }),
-            ]);
-        }
 
         return view('admin.attendance_logs.index', compact(
             'totalLogs',
             'checkInLogs',
             'checkOutLogs',
             'outOfRadiusLogs',
+            'pendingReasonLogs',
             'logs'
         ));
+    }
+
+    /**
+     * Setujui catatan alasan karyawan (Approve Reason).
+     */
+    public function approveReason(Request $request, $id)
+    {
+        $log = AttendanceLog::findOrFail($id);
+
+        $log->approval_status = 'APPROVED';
+        $log->approval_notes = $request->input('approval_notes', 'Alasan keterlambatan/pulang cepat disetujui oleh Admin.');
+        $log->approved_by = auth()->id();
+        $log->save();
+
+        return redirect()->back()
+            ->with('success', "Catatan alasan karyawan '{$log->user->name}' BERHASIL DISETUJUI. Presensi sah tercatat!");
+    }
+
+    /**
+     * Tolak catatan alasan karyawan (Reject Reason).
+     */
+    public function rejectReason(Request $request, $id)
+    {
+        $log = AttendanceLog::findOrFail($id);
+
+        $log->approval_status = 'REJECTED';
+        $log->approval_notes = $request->input('approval_notes', 'Alasan ditolak oleh Admin HRIS.');
+        $log->approved_by = auth()->id();
+        $log->save();
+
+        return redirect()->back()
+            ->with('success', "Catatan alasan karyawan '{$log->user->name}' DITOLAK! Presensi dianggap tidak valid/terlambat tanpa izin sah.");
     }
 
     /**
@@ -88,7 +101,7 @@ class AttendanceLogController extends Controller
      */
     public function export(Request $request)
     {
-        $fileName = 'Laporan_Presensi_Karyawan_' . date('Y-m-d_H-i') . '.csv';
+        $fileName = 'Laporan_Presensi_Karyawan_'.date('Y-m-d_H-i').'.csv';
 
         $query = AttendanceLog::with('user', 'geofence');
 
@@ -97,10 +110,10 @@ class AttendanceLogController extends Controller
             $query->where(function ($q) use ($search) {
                 $q->whereHas('user', function ($u) use ($search) {
                     $u->where('name', 'LIKE', "%{$search}%")
-                      ->orWhere('nip', 'LIKE', "%{$search}%");
+                        ->orWhere('nip', 'LIKE', "%{$search}%");
                 })
-                ->orWhere('type', 'LIKE', "%{$search}%")
-                ->orWhere('status', 'LIKE', "%{$search}%");
+                    ->orWhere('type', 'LIKE', "%{$search}%")
+                    ->orWhere('status', 'LIKE', "%{$search}%");
             });
         }
 
@@ -114,21 +127,21 @@ class AttendanceLogController extends Controller
         $logs = $query->latest('date')->latest('time')->get();
 
         $headers = [
-            "Content-Type" => "text/csv; charset=UTF-8",
-            "Content-Disposition" => "attachment; filename=\"$fileName\"",
-            "Pragma" => "no-cache",
-            "Cache-Control" => "must-revalidate, post-check=0, pre-check=0",
-            "Expires" => "0"
+            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => "attachment; filename=\"$fileName\"",
+            'Pragma' => 'no-cache',
+            'Cache-Control' => 'must-revalidate, post-check=0, pre-check=0',
+            'Expires' => '0',
         ];
 
         $callback = function () use ($logs) {
             $file = fopen('php://output', 'w');
-            
+
             // UTF-8 BOM
-            fputs($file, "\xEF\xBB\xBF");
+            fwrite($file, "\xEF\xBB\xBF");
 
             // Explicit Excel delimiter directive
-            fputs($file, "sep=;\n");
+            fwrite($file, "sep=;\n");
 
             // Header Row
             fputcsv($file, [
@@ -144,7 +157,7 @@ class AttendanceLogController extends Controller
                 'Jarak Geofence (Meter)',
                 'Koordinat Lat / Lng',
                 'Lokasi Kantor',
-                'Catatan'
+                'Catatan',
             ], ';');
 
             // Data Rows
@@ -154,15 +167,15 @@ class AttendanceLogController extends Controller
                     $log->user->nip ?? '-',
                     $log->user->name ?? '-',
                     $log->user->position ?? '-',
-                    \Carbon\Carbon::parse($log->date)->format('d/m/Y'),
+                    Carbon::parse($log->date)->format('d/m/Y'),
                     $log->time,
                     $log->type,
                     $log->status,
-                    $log->face_confidence_score ? $log->face_confidence_score . '%' : 'N/A',
-                    $log->distance_from_office . ' Meter',
+                    $log->face_confidence_score ? $log->face_confidence_score.'%' : 'N/A',
+                    $log->distance_from_office.' Meter',
                     "{$log->lat}, {$log->lng}",
                     $log->geofence->office_name ?? 'Kantor Utama',
-                    $log->notes ?? '-'
+                    $log->notes ?? '-',
                 ], ';');
             }
 

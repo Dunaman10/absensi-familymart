@@ -150,7 +150,7 @@
                     <th scope="col">Nama Karyawan</th>
                     <th scope="col">NIP (Username)</th>
                     <th scope="col">Jabatan / Tim</th>
-                    <th scope="col">Role Akses</th>
+                    <th scope="col">Shift Kerja</th>
                     <th scope="col">Status Akun</th>
                     <th scope="col" class="text-end">Aksi</th>
                   </tr>
@@ -170,10 +170,10 @@
                     <td><span class="fw-mono text-muted">{{ $emp->nip }}</span></td>
                     <td>{{ $emp->position ?? '-' }}</td>
                     <td>
-                      @if($emp->role == 'admin')
-                        <span class="badge text-bg-info">Admin HR</span>
+                      @if($emp->shift)
+                        <span class="badge text-bg-info"><i class="bi bi-clock me-1"></i>{{ $emp->shift->name }}</span>
                       @else
-                        <span class="badge text-bg-secondary">Karyawan</span>
+                        <span class="badge text-bg-secondary">Default</span>
                       @endif
                     </td>
                     <td>
@@ -186,7 +186,10 @@
                       @endif
                     </td>
                     <td class="text-end">
-                      <button type="button" class="btn btn-light btn-sm text-primary me-1" title="Edit Karyawan" onclick="openEditEmpModal({{ $emp->id }}, '{{ addslashes($emp->name) }}', '{{ $emp->nip }}', '{{ addslashes($emp->position ?? '') }}', '{{ addslashes($emp->email ?? '') }}', '{{ $emp->account_status }}')">
+                      <a href="{{ route('admin.employees.show', $emp->id) }}" class="btn btn-light btn-sm text-info me-1" title="Detail Presensi & Penggajian">
+                        <i class="bi bi-eye"></i>
+                      </a>
+                      <button type="button" class="btn btn-light btn-sm text-primary me-1" title="Edit Karyawan" onclick="openEditEmpModal({{ $emp->id }}, '{{ addslashes($emp->name) }}', '{{ $emp->nip }}', '{{ addslashes($emp->position ?? '') }}', '{{ addslashes($emp->email ?? '') }}', '{{ $emp->account_status }}', {{ $emp->shift_id ?? 'null' }})">
                         <i class="bi bi-pencil"></i>
                       </button>
                       <form id="deleteFormEmp_{{ $emp->id }}" action="{{ route('admin.employees.destroy', $emp->id) }}" method="POST" class="d-inline">
@@ -259,6 +262,15 @@
               <input type="text" class="form-control" id="employeePosition" name="position" placeholder="Contoh: Operations Specialist">
             </div>
             <div class="mb-3">
+              <label for="employeeShift" class="form-label">Penugasan Shift Kerja</label>
+              <select class="form-select" id="employeeShift" name="shift_id">
+                <option value="">-- Tanpa Shift (Default Office) --</option>
+                @foreach($shifts as $s)
+                  <option value="{{ $s->id }}">{{ $s->name }} ({{ substr($s->start_time,0,5) }} - {{ substr($s->end_time,0,5) }} WIB)</option>
+                @endforeach
+              </select>
+            </div>
+            <div class="mb-3">
               <label class="form-label">Status Akun Awal</label>
               <input type="text" class="form-control text-warning fw-semibold bg-body-tertiary" value="Pending Biometrik" readonly>
               <small class="text-muted" style="font-size: 0.75rem;">Status otomatis Pending Biometrik sampai foto wajah didaftarkan saat presensi pertama.</small>
@@ -311,6 +323,15 @@
               <input type="text" class="form-control" id="editEmpPosition" name="position" placeholder="Contoh: Operations Specialist">
             </div>
             <div class="mb-3">
+              <label for="editEmpShift" class="form-label fw-semibold">Penugasan Shift Kerja</label>
+              <select class="form-select" id="editEmpShift" name="shift_id">
+                <option value="">-- Tanpa Shift (Default Office) --</option>
+                @foreach($shifts as $s)
+                  <option value="{{ $s->id }}">{{ $s->name }} ({{ substr($s->start_time,0,5) }} - {{ substr($s->end_time,0,5) }} WIB)</option>
+                @endforeach
+              </select>
+            </div>
+            <div class="mb-3">
               <label for="editEmpStatus" class="form-label fw-semibold">Status Akun</label>
               <select class="form-select" id="editEmpStatus" name="account_status" required>
                 <option value="Aktif">Aktif</option>
@@ -343,12 +364,15 @@
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
   <script>
-    function openEditEmpModal(id, name, nip, position, email, status) {
+    function openEditEmpModal(id, name, nip, position, email, status, shiftId) {
       document.getElementById('editEmployeeForm').action = `/admin/employees/${id}`;
       document.getElementById('editEmpNip').value = nip;
       document.getElementById('editEmpName').value = name;
       document.getElementById('editEmpEmail').value = email;
       document.getElementById('editEmpPosition').value = position;
+      if (document.getElementById('editEmpShift')) {
+        document.getElementById('editEmpShift').value = shiftId || '';
+      }
       if (document.getElementById('editEmpStatus')) {
         document.getElementById('editEmpStatus').value = status || 'Aktif';
       }

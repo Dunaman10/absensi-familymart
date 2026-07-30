@@ -151,7 +151,9 @@
                     <th scope="col">Tanggal & Waktu</th>
                     <th scope="col">Tipe Presensi</th>
                     <th scope="col">Status Kehadiran</th>
-                    <th scope="col">Aksi</th>
+                    <th scope="col">Catatan Alasan</th>
+                    <th scope="col">Validasi Alasan</th>
+                    <th scope="col" class="text-end">Aksi</th>
                   </tr>
                 </thead>
                 <tbody id="logsTableBody">
@@ -189,6 +191,28 @@
                       @endif
                     </td>
                     <td>
+                      <small class="text-white d-block" style="max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                        {{ $log->notes ?? '-' }}
+                      </small>
+                    </td>
+                    <td>
+                      @if($log->approval_status == 'APPROVED')
+                        <span class="badge text-bg-success"><i class="bi bi-check-lg me-1"></i>Disetujui</span>
+                      @elseif($log->approval_status == 'REJECTED')
+                        <span class="badge text-bg-danger"><i class="bi bi-x-lg me-1"></i>Ditolak</span>
+                      @else
+                        <span class="badge text-bg-warning text-dark"><i class="bi bi-hourglass-split me-1"></i>Pending Validasi</span>
+                      @endif
+                    </td>
+                    <td class="text-end">
+                      @if($log->notes && $log->approval_status == 'PENDING')
+                        <button type="button" class="btn btn-sm btn-success rounded-circle me-1" title="Setujui Alasan" onclick="openApproveModal({{ $log->id }}, '{{ addslashes($log->user->name) }}', '{{ addslashes($log->notes) }}')">
+                          <i class="bi bi-check-lg"></i>
+                        </button>
+                        <button type="button" class="btn btn-sm btn-danger rounded-circle me-1" title="Tolak Alasan" onclick="openRejectModal({{ $log->id }}, '{{ addslashes($log->user->name) }}', '{{ addslashes($log->notes) }}')">
+                          <i class="bi bi-x-lg"></i>
+                        </button>
+                      @endif
                       <button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-3" onclick="showAdminDetailModal({{ json_encode([
                         'name' => $log->user->name ?? 'Karyawan',
                         'nip' => $log->user->nip,
@@ -196,6 +220,8 @@
                         'time' => $log->time,
                         'type' => $log->type,
                         'status' => $log->status,
+                        'approval_status' => $log->approval_status,
+                        'approval_notes' => $log->approval_notes,
                         'is_outside_radius' => $log->is_outside_radius,
                         'distance' => $log->distance_from_office,
                         'lat' => $log->lat,
@@ -313,9 +339,13 @@
               <small class="d-block text-muted" id="detailCoords" style="font-size: 0.75rem;">-</small>
             </div>
           </div>
-          <div class="mb-4">
+          <div class="mb-3">
             <small class="text-muted d-block mb-1">Catatan Karyawan</small>
             <div class="p-2 bg-body-secondary rounded text-body border" id="detailNotes" style="font-size: 0.85rem;">-</div>
+          </div>
+          <div class="mb-4">
+            <small class="text-muted d-block mb-1">Status Validasi & Catatan Balasan HR/Admin</small>
+            <div class="p-2 rounded border" id="detailApprovalBox" style="font-size: 0.85rem;">-</div>
           </div>
           <div>
             <small class="text-muted d-block mb-2 text-center">Foto Bukti Presensi</small>
@@ -328,10 +358,85 @@
     </div>
   </div>
 
+  <!-- Modal Setujui Alasan -->
+  <div class="modal fade" id="approveReasonModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <form id="approveReasonForm" action="" method="POST">
+          @csrf
+          <div class="modal-header">
+            <h5 class="modal-title fw-bold text-success"><i class="bi bi-check-circle me-2"></i>Setujui Catatan Alasan Presensi</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <p>Anda akan menyetujui alasan karyawan: <strong id="approveEmployeeName" class="text-white"></strong></p>
+            <div class="mb-3">
+              <label class="form-label small text-muted">Catatan Alasan Karyawan:</label>
+              <div class="p-2 bg-dark rounded border text-white" id="approveEmployeeNotes"></div>
+            </div>
+            <div class="mb-3">
+              <label for="approveNotesInput" class="form-label fw-semibold">Catatan / Keterangan Admin (Opsional)</label>
+              <textarea class="form-control" id="approveNotesInput" name="approval_notes" rows="2" placeholder="Contoh: Alasan disetujui, diizinkan karena kendala lalu lintas."></textarea>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Batal</button>
+            <button type="submit" class="btn btn-success btn-sm"><i class="bi bi-check-lg me-1"></i> Ya, Setujui Alasan</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Tolak Alasan -->
+  <div class="modal fade" id="rejectReasonModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <form id="rejectReasonForm" action="" method="POST">
+          @csrf
+          <div class="modal-header">
+            <h5 class="modal-title fw-bold text-danger"><i class="bi bi-x-circle me-2"></i>Tolak Catatan Alasan Presensi</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <p>Anda akan menolak alasan karyawan: <strong id="rejectEmployeeName" class="text-white"></strong></p>
+            <div class="mb-3">
+              <label class="form-label small text-muted">Catatan Alasan Karyawan:</label>
+              <div class="p-2 bg-dark rounded border text-white" id="rejectEmployeeNotes"></div>
+            </div>
+            <div class="mb-3">
+              <label for="rejectNotesInput" class="form-label fw-semibold">Alasan Penolakan Admin</label>
+              <textarea class="form-control" id="rejectNotesInput" name="approval_notes" rows="2" placeholder="Contoh: Bukti/alasan kurang jelas." required></textarea>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Batal</button>
+            <button type="submit" class="btn btn-danger btn-sm"><i class="bi bi-x-lg me-1"></i> Tolak Alasan</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
   <script src="{{ asset('assets/js/bootstrap.bundle.min.js') }}"></script>
   <script src="{{ asset('assets/js/main.js') }}"></script>
-
   <script>
+    function openApproveModal(logId, empName, notes) {
+      document.getElementById('approveReasonForm').action = `/admin/attendance-logs/${logId}/approve`;
+      document.getElementById('approveEmployeeName').innerText = empName;
+      document.getElementById('approveEmployeeNotes').innerText = notes;
+      var modal = new bootstrap.Modal(document.getElementById('approveReasonModal'));
+      modal.show();
+    }
+
+    function openRejectModal(logId, empName, notes) {
+      document.getElementById('rejectReasonForm').action = `/admin/attendance-logs/${logId}/reject`;
+      document.getElementById('rejectEmployeeName').innerText = empName;
+      document.getElementById('rejectEmployeeNotes').innerText = notes;
+      var modal = new bootstrap.Modal(document.getElementById('rejectReasonModal'));
+      modal.show();
+    }
+
     function showAdminDetailModal(data) {
       document.getElementById('detailName').textContent = data.name;
       document.getElementById('detailNip').textContent = 'NIP. ' + data.nip;
@@ -361,6 +466,18 @@
       
       document.getElementById('detailNotes').textContent = data.notes ? data.notes : '-';
       
+      const approvalBox = document.getElementById('detailApprovalBox');
+      if (data.approval_status === 'APPROVED') {
+        approvalBox.className = 'p-2 bg-success-subtle text-success border border-success-subtle rounded';
+        approvalBox.innerHTML = `<strong><i class="bi bi-check-circle me-1"></i>DISETUJUI (Hadir Sah)</strong><br><span class="text-body small">${data.approval_notes || 'Alasan diterima HR.'}</span>`;
+      } else if (data.approval_status === 'REJECTED') {
+        approvalBox.className = 'p-2 bg-danger-subtle text-danger border border-danger-subtle rounded';
+        approvalBox.innerHTML = `<strong><i class="bi bi-x-circle me-1"></i>DITOLAK (Absen Tidak Sah)</strong><br><span class="text-body small">${data.approval_notes || 'Alasan tidak diterima HR.'}</span>`;
+      } else {
+        approvalBox.className = 'p-2 bg-warning-subtle text-warning-emphasis border border-warning-subtle rounded';
+        approvalBox.innerHTML = `<strong><i class="bi bi-hourglass-split me-1"></i>MENUNGGU VALIDASI HR</strong><br><span class="text-body small">Belum ada keputusan dari Admin HR.</span>`;
+      }
+
       const photoEl = document.getElementById('detailPhotoImg');
       if (data.photo) {
         photoEl.src = data.photo;
