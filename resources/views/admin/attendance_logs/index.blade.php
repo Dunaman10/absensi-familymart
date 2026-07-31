@@ -205,11 +205,11 @@
                       @endif
                     </td>
                     <td class="text-end">
-                      @if($log->notes && $log->approval_status == 'PENDING')
-                        <button type="button" class="btn btn-sm btn-success rounded-circle me-1" title="Setujui Alasan" onclick="openApproveModal({{ $log->id }}, '{{ addslashes($log->user->name) }}', '{{ addslashes($log->notes) }}')">
+                      @if($log->approval_status == 'PENDING')
+                        <button type="button" class="btn btn-sm btn-success rounded-circle me-1" title="Setujui Presensi" onclick="openApproveModal({{ $log->id }}, '{{ addslashes($log->user->name) }}', '{{ addslashes($log->notes ?? 'Tanpa Catatan Alasan') }}')">
                           <i class="bi bi-check-lg"></i>
                         </button>
-                        <button type="button" class="btn btn-sm btn-danger rounded-circle me-1" title="Tolak Alasan" onclick="openRejectModal({{ $log->id }}, '{{ addslashes($log->user->name) }}', '{{ addslashes($log->notes) }}')">
+                        <button type="button" class="btn btn-sm btn-danger rounded-circle me-1" title="Tolak Presensi" onclick="openRejectModal({{ $log->id }}, '{{ addslashes($log->user->name) }}', '{{ addslashes($log->notes ?? 'Tanpa Catatan Alasan') }}')">
                           <i class="bi bi-x-lg"></i>
                         </button>
                       @endif

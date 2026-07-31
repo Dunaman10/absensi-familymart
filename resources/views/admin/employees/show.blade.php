@@ -20,6 +20,11 @@
   <link rel="stylesheet" href="{{ asset('assets/css/style.css') }}">
 
   <style>
+    @page {
+      size: A4 landscape;
+      margin: 15mm 20mm;
+    }
+
     @media print {
       /* Sembunyikan elemen navigasi, sidebar, navbar, tombol & filter */
       .admin-sidebar,
@@ -43,7 +48,7 @@
       .page-heading {
         border-bottom: 2px solid #333;
         padding-bottom: 15px;
-        margin-bottom: 20px;
+        margin-bottom: 25px;
       }
 
       .page-heading h1 {
@@ -64,6 +69,7 @@
         background: #f8f9fa !important;
         color: #000 !important;
         box-shadow: none !important;
+        padding: 15px !important;
       }
 
       .metric-value {
@@ -74,6 +80,7 @@
         border: 1px solid #ccc !important;
         background: #ffffff !important;
         box-shadow: none !important;
+        padding: 15px !important;
       }
 
       .table {
@@ -84,13 +91,14 @@
       .table th, .table td {
         border-bottom: 1px solid #ddd !important;
         color: #000000 !important;
-        padding: 8px !important;
+        padding: 10px 12px !important;
       }
 
-      .badge {
-        border: 1px solid #888 !important;
-        color: #000 !important;
-        background: #eee !important;
+      .print-history-section {
+        page-break-before: always !important;
+        break-before: page !important;
+        margin-top: 30px !important;
+        padding-top: 20px !important;
       }
     }
   </style>
@@ -119,7 +127,7 @@
             <div class="page-heading-copy d-flex align-items-center gap-3">
               <img class="avatar-img avatar-lg rounded-circle shadow print-avatar" src="{{ $employee->registered_face_photo ? asset($employee->registered_face_photo) : 'https://ui-avatars.com/api/?name='.urlencode($employee->name).'&background=0D8ABC&color=fff' }}" alt="{{ $employee->name }}" style="width: 64px; height: 64px; object-fit: cover;">
               <div>
-                <p class="eyebrow mb-1">LAPORAN REKAP PRESENSI & PAYROLL KARYAWAN</p>
+                <p class="eyebrow mb-1">LAPORAN REKAP PRESENSI</p>
                 <h1 class="h3 mb-1">{{ $employee->name }}</h1>
                 <p class="text-muted mb-0">NIP: <span class="fw-mono text-white me-3">{{ $employee->nip }}</span> Jabatan: <span class="text-white">{{ $employee->position ?? '-' }}</span> | Shift: <span class="badge text-bg-info">{{ $employee->shift->name ?? 'Default Office' }}</span></p>
                 <p class="d-none d-print-block fw-bold text-dark mt-1 mb-0" style="font-size: 0.9rem;">
@@ -205,7 +213,7 @@
           </section>
 
           <!-- History Table Log Presensi Karyawan -->
-          <section class="panel mt-4">
+          <section class="panel print-history-section mt-4">
             <div class="panel-header flex-wrap gap-2">
               <div>
                 <h2 class="h5 mb-1 section-title"><i class="bi bi-journal-text" aria-hidden="true"></i><span>Histori Presensi Periode Ini</span></h2>
@@ -280,6 +288,11 @@
               </table>
             </div>
           </section>
+
+          <!-- Print Footer Notice -->
+          <div class="d-none d-print-block text-end mt-4 pt-3" style="font-size: 0.8rem; color: #666;">
+            Dicetak dari sistem Absensiku Pro pada {{ now()->timezone('Asia/Jakarta')->translatedFormat('d F Y') }}
+          </div>
         </div>
       </main>
     </div>

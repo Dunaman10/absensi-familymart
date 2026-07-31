@@ -205,9 +205,14 @@ class AttendanceController extends Controller
             }
         }
 
-        // Approval status logic for notes
-        $hasNotes = $request->filled('notes') && trim($request->notes) !== '';
-        $approvalStatus = ($hasNotes && in_array($status, ['TERLAMBAT', 'PULANG_CEPAT'])) ? 'PENDING' : 'APPROVED';
+        // Approval status logic:
+        // Setiap presensi yang anomali (TERLAMBAT, PULANG_CEPAT, atau LUAR RADIUS)
+        // akan diset ke status 'PENDING' agar Admin HR yang mengambil keputusan persetujuan/penolakan.
+        if (in_array($status, ['TERLAMBAT', 'PULANG_CEPAT']) || $isOutsideRadius) {
+            $approvalStatus = 'PENDING';
+        } else {
+            $approvalStatus = 'APPROVED';
+        }
 
         // Process Base64 Photo Data
         $photoData = $request->photo_data;
