@@ -4,10 +4,11 @@ namespace App\Providers;
 
 use App\Models\AttendanceLog;
 use App\Models\User;
+use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
-use Illuminate\Pagination\Paginator;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -24,6 +25,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        if (request()->header('x-forwarded-proto') === 'https' || str_contains(request()->header('host') ?? '', 'ngrok')) {
+            URL::forceScheme('https');
+        }
+
         Paginator::useBootstrapFive();
 
         // View Composer for Admin Navbar Notifications
@@ -101,7 +106,7 @@ class AppServiceProvider extends ServiceProvider
                     $notifications[] = [
                         'icon' => 'bi-box-arrow-in-right text-success',
                         'title' => 'Presensi Masuk Berhasil',
-                        'subtitle' => 'Tercatat pada pukul ' . $checkIn->time,
+                        'subtitle' => 'Tercatat pada pukul '.$checkIn->time,
                         'time' => 'Hari Ini',
                     ];
                 } else {
@@ -117,7 +122,7 @@ class AppServiceProvider extends ServiceProvider
                     $notifications[] = [
                         'icon' => 'bi-box-arrow-left text-info',
                         'title' => 'Presensi Pulang Berhasil',
-                        'subtitle' => 'Tercatat pada pukul ' . $checkOut->time,
+                        'subtitle' => 'Tercatat pada pukul '.$checkOut->time,
                         'time' => 'Hari Ini',
                     ];
                 }
