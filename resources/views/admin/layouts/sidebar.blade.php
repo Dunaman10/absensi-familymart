@@ -1,9 +1,9 @@
 <aside class="admin-sidebar" id="adminSidebar" aria-label="Main navigation">
   <div class="sidebar-header">
-    <a class="brand-mark" href="{{ route('admin.dashboard') }}" aria-label="Absensiku Pro dashboard">
-      <span class="brand-icon"><i class="bi bi-grid-1x2-fill" aria-hidden="true"></i></span>
+    <a class="brand-mark" href="{{ route('admin.dashboard') }}" aria-label="Absensi FamilyMart dashboard">
+      <img src="{{ asset('assets/images/logo/logo-fm.png') }}" alt="Logo" style="height: 38px; width: auto; object-fit: contain; margin-right: 12px;">
       <span class="brand-copy">
-        <span class="brand-title">Absensiku Pro</span>
+        <span class="brand-title">Absensi FamilyMart</span>
         <span class="brand-subtitle">Panel Admin HRIS</span>
       </span>
     </a>

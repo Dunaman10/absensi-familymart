@@ -1,7 +1,7 @@
 {
-  "name": "Absensiku Pro",
-  "short_name": "AbsensikuPro",
-  "description": "Sistem Presensi Modern Berbasis Biometrik Wajah dan Geofencing HRIS",
+  "name": "Absensi FamilyMart",
+  "short_name": "AbsensiFM",
+  "description": "Sistem Presensi Modern Berbasis Biometrik Wajah dan Geofencing",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#0a0c10",
@@ -9,26 +9,10 @@
   "orientation": "portrait-primary",
   "icons": [
     {
-      "src": "/pwa-icon-192.png",
-      "sizes": "192x192",
+      "src": "/assets/images/logo/icon.png",
+      "sizes": "192x192 512x512",
       "type": "image/png",
       "purpose": "any maskable"
-    },
-    {
-      "src": "/pwa-icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "/assets/images/favicon/android-icon-192x192.png",
-      "sizes": "192x192",
-      "type": "image/png"
-    },
-    {
-      "src": "/assets/images/favicon/android-icon-512x512.png",
-      "sizes": "512x512",
-      "type": "image/png"
     }
   ]
 }

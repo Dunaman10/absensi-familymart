@@ -5,7 +5,7 @@
 </head>
 <body style="font-family: Arial, sans-serif; background-color: #f4f7f6; color: #333; margin: 0; padding: 20px;">
     <div style="max-width: 600px; margin: 0 auto; background: #ffffff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
-        <h2 style="color: #0d6efd; text-align: center;">Absensiku Pro</h2>
+        <h2 style="color: #0d6efd; text-align: center;">Absensi FamilyMart</h2>
         <p>Halo <strong>{{ $name }}</strong>,</p>
         <p>Kami menerima permintaan untuk mereset kata sandi akun Anda. Berikut adalah kode OTP Anda:</p>
         
@@ -20,7 +20,7 @@
         
         <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;">
         <p style="font-size: 12px; color: #777; text-align: center;">
-            &copy; {{ date('Y') }} Absensiku Pro. All rights reserved.
+            &copy; {{ date('Y') }} Absensi FamilyMart. All rights reserved.
         </p>
     </div>
 </body>

@@ -3,17 +3,18 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Absensiku Pro - Kelola Data Karyawan (CRUD)">
-  <title>Data Karyawan | Absensiku Pro</title>
-  <link rel="icon" type="image/svg+xml" href="{{ asset('favicon.svg') }}">
+  <meta name="description" content="Absensi FamilyMart - Kelola Data Karyawan (CRUD)">
+  <title>Data Karyawan | Absensi FamilyMart</title>
+  <link rel="icon" type="image/png" href="{{ asset('assets/images/logo/icon.png') }}">
+  <link rel="shortcut icon" href="{{ asset('assets/images/logo/icon.png') }}">
 
   <!-- PWA Meta Tags -->
   <link rel="manifest" href="{{ asset('manifest.json') }}">
   <meta name="theme-color" content="#0a0c10">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="Absensiku Pro">
-  <link rel="apple-touch-icon" href="{{ asset('assets/images/favicon/apple-icon-180x180.png') }}">
+  <meta name="apple-mobile-web-app-title" content="Absensi FamilyMart">
+  <link rel="apple-touch-icon" href="{{ asset('assets/images/logo/icon.png') }}">
 
   <link rel="stylesheet" href="{{ asset('assets/css/bootstrap.min.css') }}">
   <link rel="stylesheet" href="{{ asset('assets/vendors/bootstrap-icons/bootstrap-icons.css') }}">
@@ -255,7 +256,7 @@
             </div>
             <div class="mb-3">
               <label for="employeeEmail" class="form-label">Alamat Email (OTP Reset Sandi)</label>
-              <input type="email" class="form-control" id="employeeEmail" name="email" placeholder="Contoh: fauzi@absensiku.com" required>
+              <input type="email" class="form-control" id="employeeEmail" name="email" placeholder="Contoh: fauzi@familymart.com" required>
             </div>
             <div class="mb-3">
               <label for="employeePosition" class="form-label">Jabatan / Tim</label>
@@ -316,7 +317,7 @@
             </div>
             <div class="mb-3">
               <label for="editEmpEmail" class="form-label fw-semibold">Alamat Email</label>
-              <input type="email" class="form-control" id="editEmpEmail" name="email" required placeholder="Contoh: fauzi@absensiku.com">
+              <input type="email" class="form-control" id="editEmpEmail" name="email" required placeholder="Contoh: fauzi@familymart.com">
             </div>
             <div class="mb-3">
               <label for="editEmpPosition" class="form-label fw-semibold">Jabatan / Tim</label>

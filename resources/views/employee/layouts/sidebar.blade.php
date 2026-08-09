@@ -1,9 +1,9 @@
 <aside class="admin-sidebar" id="adminSidebar" aria-label="Employee navigation">
   <div class="sidebar-header">
-    <a class="brand-mark" href="{{ route('employee.dashboard') }}" aria-label="Absensiku Pro Employee Portal">
-      <span class="brand-icon"><i class="bi bi-person-bounding-box" aria-hidden="true"></i></span>
+    <a class="brand-mark" href="{{ route('employee.dashboard') }}" aria-label="Absensi FamilyMart Employee Portal">
+      <img src="{{ asset('assets/images/logo/logo-fm.png') }}" alt="Logo" style="height: 38px; width: auto; object-fit: contain; margin-right: 12px;">
       <span class="brand-copy">
-        <span class="brand-title">Absensiku Pro</span>
+        <span class="brand-title">Absensi FamilyMart</span>
         <span class="brand-subtitle">Portal Presensi Karyawan</span>
       </span>
     </a>

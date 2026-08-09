@@ -3,17 +3,18 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <meta name="description" content="Absensiku Pro Authentication Page">
-  <title>Login | Absensiku Pro</title>
-  <link rel="icon" type="image/svg+xml" href="{{ asset('favicon.svg') }}">
+  <meta name="description" content="Absensi FamilyMart Authentication Page">
+  <title>Login | Absensi FamilyMart</title>
+  <link rel="icon" type="image/png" href="{{ asset('assets/images/logo/icon.png') }}">
+  <link rel="shortcut icon" href="{{ asset('assets/images/logo/icon.png') }}">
 
   <!-- PWA Meta Tags -->
   <link rel="manifest" href="{{ asset('manifest.json') }}">
   <meta name="theme-color" content="#0a0c10">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="Absensiku Pro">
-  <link rel="apple-touch-icon" href="{{ asset('assets/images/favicon/apple-icon-180x180.png') }}">
+  <meta name="apple-mobile-web-app-title" content="Absensi FamilyMart">
+  <link rel="apple-touch-icon" href="{{ asset('assets/images/logo/icon.png') }}">
 
   <link rel="stylesheet" href="{{ asset('assets/css/bootstrap.min.css') }}">
   <link rel="stylesheet" href="{{ asset('assets/vendors/bootstrap-icons/bootstrap-icons.css') }}">
@@ -26,9 +27,11 @@
   </button>
   <main class="auth-page">
     <section class="auth-card">
-      <a class="auth-brand" href="{{ url('/') }}">
-        <span class="brand-icon"><i class="bi bi-person-check-fill" aria-hidden="true"></i></span>
-        <span><strong>Absensiku Pro</strong><small>Sistem Presensi Geofencing & Biometrik</small></span>
+      <a class="auth-brand" href="{{ url('/') }}" style="flex-direction: column; align-items: center; text-align: center; gap: 0.4rem; margin-bottom: 1.5rem;">
+        <img src="{{ asset('assets/images/logo/logo-fm.png') }}" alt="Logo" style="height: 32px; max-width: 180px; width: auto; object-fit: contain;">
+        <span style="display: block;">
+          <small style="font-size: 0.78rem; display: block; margin-top: 2px; color: var(--admin-muted);">Sistem Presensi Geofencing & Biometrik</small>
+        </span>
       </a>
 
       
@@ -53,7 +56,7 @@
         <div class="mb-4">
           <p class="eyebrow mb-1">Akses Terjaga & Aman</p>
           <h1 class="h3 mb-1">Masuk</h1>
-          <p class="text-muted mb-0">Silakan masuk ke akun Absensiku Pro Anda.</p>
+          <p class="text-muted mb-0">Silakan masuk ke akun Absensi FamilyMart Anda.</p>
         </div>
         <div class="mb-3">
           <label class="form-label" for="loginNip">Nomor Induk Pegawai (NIP)</label>
