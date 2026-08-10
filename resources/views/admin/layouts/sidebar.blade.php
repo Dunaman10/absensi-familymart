@@ -1,7 +1,7 @@
 <aside class="admin-sidebar" id="adminSidebar" aria-label="Main navigation">
   <div class="sidebar-header">
     <a class="brand-mark" href="{{ route('admin.dashboard') }}" aria-label="Absensi FamilyMart dashboard">
-      <img src="{{ asset('assets/images/logo/logo-fm.png') }}" alt="Logo" style="height: 38px; width: auto; object-fit: contain; margin-right: 12px;">
+      <img src="{{ asset('assets/images/logo/icon.png') }}" alt="Logo" style="height: 34px; width: 34px; object-fit: contain; flex-shrink: 0; margin-right: 10px; border-radius: 6px;">
       <span class="brand-copy">
         <span class="brand-title">Absensi FamilyMart</span>
         <span class="brand-subtitle">Panel Admin HRIS</span>

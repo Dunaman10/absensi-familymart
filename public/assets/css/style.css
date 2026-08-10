@@ -1026,8 +1026,20 @@ html[data-theme="dark"] .profile-button .avatar-sm {
 
   body.sidebar-mini .sidebar-header,
   body.sidebar-mini .sidebar-footer {
-    margin-inline: 1rem;
+    margin-inline: 0;
     padding-inline: 0;
+    display: flex;
+    justify-content: center;
+  }
+
+  body.sidebar-mini .brand-mark {
+    justify-content: center;
+    gap: 0;
+    width: 100%;
+  }
+
+  body.sidebar-mini .brand-mark img {
+    margin-right: 0 !important;
   }
 
   body.sidebar-mini .sidebar-nav .nav-link {
