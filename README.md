@@ -27,7 +27,7 @@
 
 ## 🛠️ Teknologi yang Digunakan
 
-- **Backend**: [Laravel 11](https://laravel.com/) (PHP)
+- **Backend**: [Laravel 13](https://laravel.com/) (PHP)
 - **Frontend**: Blade Templating, HTML5, Vanilla JavaScript, [Bootstrap 5](https://getbootstrap.com/)
 - **Biometrik**: [face-api.js](https://github.com/vladmandic/face-api) (TensorFlow.js berbasis browser)
 - **Database**: MySQL / SQLite (Sesuai Konfigurasi Laravel)
@@ -42,7 +42,7 @@ Ikuti panduan berikut dari nol hingga aplikasi berhasil dijalankan di komputer l
 
 ### 1. Persyaratan Sistem
 Pastikan komputer Anda sudah terinstal:
-- **PHP** (>= 8.2 direkomendasikan)
+- **PHP** (>= 8.3 direkomendasikan)
 - **Composer** (Package Manager PHP)
 - **MySQL / MariaDB** (atau database lokal yang mendukung Laravel, seperti SQLite)
 - **Git**
