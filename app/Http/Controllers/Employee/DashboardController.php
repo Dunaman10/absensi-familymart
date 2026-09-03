@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Employee;
 use App\Http\Controllers\Controller;
 use App\Models\AttendanceLog;
 use App\Models\GeofenceSetting;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class DashboardController extends Controller
@@ -18,7 +17,7 @@ class DashboardController extends Controller
         $user = Auth::user();
         $today = now()->timezone('Asia/Jakarta')->toDateString();
 
-        $primaryGeofence = GeofenceSetting::where('is_active', true)->first() 
+        $primaryGeofence = GeofenceSetting::where('is_active', true)->first()
             ?? GeofenceSetting::first();
 
         $checkInLog = AttendanceLog::where('user_id', $user->id)
@@ -45,13 +44,17 @@ class DashboardController extends Controller
             'date_formatted' => now()->timezone('Asia/Jakarta')->translatedFormat('l, d F Y'),
         ];
 
+        $userShift = $user->shift;
+
         $geofence = [
-            'office_name' => $primaryGeofence->office_name ?? 'Kantor Utama',
+            'office_name' => $primaryGeofence->office_name ?? 'FamilyMart Head Office',
             'office_lat' => $primaryGeofence->lat ?? -6.208800,
             'office_lng' => $primaryGeofence->lng ?? 106.845600,
             'radius_meters' => $primaryGeofence->radius_in_meters ?? 50,
-            'shift_start' => $primaryGeofence->shift_start ?? '08:00',
-            'shift_end' => $primaryGeofence->shift_end ?? '17:00',
+            'shift_name' => $userShift ? $userShift->name : 'Shift Pagi (Family Mart)',
+            'shift_start' => $userShift ? substr($userShift->start_time, 0, 5) : '06:00',
+            'shift_end' => $userShift ? substr($userShift->end_time, 0, 5) : '14:00',
+            'late_tolerance_minutes' => $userShift ? $userShift->late_tolerance_minutes : 15,
         ];
 
         $presentCount = AttendanceLog::where('user_id', $user->id)

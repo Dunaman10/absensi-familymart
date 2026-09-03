@@ -5,8 +5,8 @@ namespace App\Http\Controllers\Employee;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Hash;
 
 class ProfileController extends Controller
 {
@@ -16,6 +16,7 @@ class ProfileController extends Controller
     public function index()
     {
         $user = Auth::user();
+
         return view('employee.profile.index', compact('user'));
     }
 
@@ -48,10 +49,10 @@ class ProfileController extends Controller
 
         if ($request->hasFile('profile_photo')) {
             $file = $request->file('profile_photo');
-            $filename = 'emp_avatar_' . $user->id . '_' . time() . '.' . $file->getClientOriginalExtension();
+            $filename = 'emp_avatar_'.$user->id.'_'.time().'.'.$file->getClientOriginalExtension();
             $destinationPath = public_path('uploads/avatars');
 
-            if (!File::exists($destinationPath)) {
+            if (! File::exists($destinationPath)) {
                 File::makeDirectory($destinationPath, 0755, true, true);
             }
 
@@ -61,7 +62,7 @@ class ProfileController extends Controller
             }
 
             $file->move($destinationPath, $filename);
-            $user->registered_face_photo = 'uploads/avatars/' . $filename;
+            $user->registered_face_photo = 'uploads/avatars/'.$filename;
         }
 
         $user->save();
@@ -87,7 +88,7 @@ class ProfileController extends Controller
 
         $user = Auth::user();
 
-        if (!Hash::check($validated['current_password'], $user->password)) {
+        if (! Hash::check($validated['current_password'], $user->password)) {
             return redirect()->back()
                 ->withErrors(['current_password' => 'Password saat ini yang Anda masukkan salah.'])
                 ->with('error_modal', 'changePasswordModal');

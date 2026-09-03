@@ -3,13 +3,13 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Mail\ResetPasswordOtpMail;
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
-use App\Mail\ResetPasswordOtpMail;
-use Carbon\Carbon;
 
 class ForgotPasswordController extends Controller
 {
@@ -32,13 +32,19 @@ class ForgotPasswordController extends Controller
 
         $user = User::where('nip', $request->nip)->first();
 
-        if (!$user) {
-            if ($request->wantsJson()) return response()->json(['message' => 'NIP tidak ditemukan dalam sistem.'], 404);
+        if (! $user) {
+            if ($request->wantsJson()) {
+                return response()->json(['message' => 'NIP tidak ditemukan dalam sistem.'], 404);
+            }
+
             return back()->withErrors(['nip' => 'NIP tidak ditemukan dalam sistem.']);
         }
 
-        if (!$user->email) {
-            if ($request->wantsJson()) return response()->json(['message' => 'Akun ini tidak memiliki email yang terdaftar. Hubungi Admin HR.'], 400);
+        if (! $user->email) {
+            if ($request->wantsJson()) {
+                return response()->json(['message' => 'Akun ini tidak memiliki email yang terdaftar. Hubungi Admin HR.'], 400);
+            }
+
             return back()->withErrors(['nip' => 'Akun ini tidak memiliki email yang terdaftar. Hubungi Admin HR.']);
         }
 
@@ -50,7 +56,7 @@ class ForgotPasswordController extends Controller
             ['nip' => $user->nip],
             [
                 'token' => Hash::make($otp),
-                'created_at' => Carbon::now()
+                'created_at' => Carbon::now(),
             ]
         );
 
@@ -72,10 +78,10 @@ class ForgotPasswordController extends Controller
      */
     public function showVerifyForm()
     {
-        if (!session('reset_nip')) {
+        if (! session('reset_nip')) {
             return redirect()->route('password.request');
         }
-        
+
         return view('auth.verify-otp');
     }
 
@@ -89,28 +95,40 @@ class ForgotPasswordController extends Controller
         ]);
 
         $nip = session('reset_nip');
-        if (!$nip) {
-            if ($request->wantsJson()) return response()->json(['message' => 'Sesi telah habis. Silakan ulangi dari awal.'], 401);
+        if (! $nip) {
+            if ($request->wantsJson()) {
+                return response()->json(['message' => 'Sesi telah habis. Silakan ulangi dari awal.'], 401);
+            }
+
             return back()->withErrors(['otp' => 'Sesi telah habis. Silakan ulangi dari awal.']);
         }
 
         $record = DB::table('password_reset_tokens')->where('nip', $nip)->first();
 
-        if (!$record) {
-            if ($request->wantsJson()) return response()->json(['message' => 'Permintaan reset password tidak valid.'], 400);
+        if (! $record) {
+            if ($request->wantsJson()) {
+                return response()->json(['message' => 'Permintaan reset password tidak valid.'], 400);
+            }
+
             return back()->withErrors(['otp' => 'Permintaan reset password tidak valid.']);
         }
 
         // Check expiration (15 minutes)
         if (Carbon::parse($record->created_at)->addMinutes(15)->isPast()) {
             DB::table('password_reset_tokens')->where('nip', $nip)->delete();
-            if ($request->wantsJson()) return response()->json(['message' => 'Kode OTP telah kedaluwarsa. Silakan minta kode baru.'], 400);
+            if ($request->wantsJson()) {
+                return response()->json(['message' => 'Kode OTP telah kedaluwarsa. Silakan minta kode baru.'], 400);
+            }
+
             return back()->withErrors(['otp' => 'Kode OTP telah kedaluwarsa. Silakan minta kode baru.']);
         }
 
         // Verify OTP
-        if (!Hash::check($request->otp, $record->token)) {
-            if ($request->wantsJson()) return response()->json(['message' => 'Kode OTP salah.'], 400);
+        if (! Hash::check($request->otp, $record->token)) {
+            if ($request->wantsJson()) {
+                return response()->json(['message' => 'Kode OTP salah.'], 400);
+            }
+
             return back()->withErrors(['otp' => 'Kode OTP salah.']);
         }
 
@@ -120,7 +138,7 @@ class ForgotPasswordController extends Controller
         if ($request->wantsJson()) {
             return response()->json(['success' => true, 'message' => 'OTP Valid. Silakan buat password baru.']);
         }
-        
+
         return back()->with('success', 'OTP Valid. Silakan buat password baru.');
     }
 
@@ -134,8 +152,11 @@ class ForgotPasswordController extends Controller
         ]);
 
         $nip = session('otp_verified_nip');
-        if (!$nip) {
-            if ($request->wantsJson()) return response()->json(['message' => 'Akses ditolak. Selesaikan verifikasi OTP terlebih dahulu.'], 401);
+        if (! $nip) {
+            if ($request->wantsJson()) {
+                return response()->json(['message' => 'Akses ditolak. Selesaikan verifikasi OTP terlebih dahulu.'], 401);
+            }
+
             return back()->withErrors(['password' => 'Akses ditolak.']);
         }
 

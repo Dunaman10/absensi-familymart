@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Models\AttendanceLog;
 use App\Models\GeofenceSetting;
 use App\Models\User;
-use Illuminate\Http\Request;
 
 class DashboardController extends Controller
 {
@@ -18,7 +17,7 @@ class DashboardController extends Controller
         $today = now()->toDateString();
 
         $totalEmployees = User::where('role', 'user')->count();
-        
+
         $presentToday = AttendanceLog::whereDate('date', $today)
             ->where('type', 'MASUK')
             ->whereIn('status', ['TEPAT_WAKTU', 'TERLAMBAT'])
@@ -34,7 +33,7 @@ class DashboardController extends Controller
             ->where('status', 'LUAR_RADIUS')
             ->count();
 
-        $primaryGeofence = GeofenceSetting::where('is_active', true)->first() 
+        $primaryGeofence = GeofenceSetting::where('is_active', true)->first()
             ?? GeofenceSetting::first();
 
         $perPage = request('per_page', 5);

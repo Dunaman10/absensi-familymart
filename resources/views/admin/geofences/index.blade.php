@@ -107,14 +107,15 @@
             </div>
 
             <div class="col-12 col-sm-6 col-xl-3">
-              <article class="metric-card metric-danger h-100 d-flex flex-column justify-content-between">
+              <article class="metric-card metric-info h-100 d-flex flex-column justify-content-between">
                 <div class="metric-top">
-                  <span class="metric-label">JAM KERJA DEFAULT</span>
-                  <span class="metric-icon"><i class="bi bi-clock-history" aria-hidden="true"></i></span>
+                  <span class="metric-label">OPERASIONAL GERAI</span>
+                  <span class="metric-icon"><i class="bi bi-shop" aria-hidden="true"></i></span>
                 </div>
-                <div class="metric-value my-2" style="font-size: 1.1rem;">{{ $primaryGeofence ? $primaryGeofence->shift_start . ' - ' . $primaryGeofence->shift_end : '08:00 - 17:00' }}</div>
+                <div class="metric-value my-2" style="font-size: 1.15rem;">24 Jam Non-Stop</div>
                 <div class="metric-meta">
-                  <span class="text-danger">Toleransi {{ $primaryGeofence->late_tolerance_minutes ?? 15 }}m</span>
+                  <span class="text-info">Jadwal & Jam Presensi</span>
+                  <span>Mengikuti 3 Shift Kerja</span>
                 </div>
               </article>
             </div>
@@ -143,7 +144,7 @@
                 <div class="panel-header">
                   <div>
                     <h2 class="h5 mb-1 section-title"><i class="bi bi-sliders" aria-hidden="true"></i><span>Form Titik Presensi</span></h2>
-                    <p class="text-muted mb-0">Pengaturan parameter geofencing aktif.</p>
+                    <p class="text-muted mb-0">Pengaturan parameter geofencing & radius lokasi gerai.</p>
                   </div>
                 </div>
 
@@ -173,25 +174,15 @@
                         <input type="number" class="form-control" id="radiusMeters" name="radius_in_meters" value="{{ $primaryGeofence->radius_in_meters ?? 50 }}" min="5" max="5000" required>
                         <span class="input-group-text">Meter</span>
                       </div>
+                      <div class="form-text small text-muted">Radius aman GPS karyawan dari titik pusat toko FamilyMart.</div>
                     </div>
 
-                    <div class="row g-2 mb-3">
-                      <div class="col-6">
-                        <label for="shiftStart" class="form-label">Jam Masuk</label>
-                        <input type="time" class="form-control" id="shiftStart" name="shift_start" value="{{ $primaryGeofence->shift_start ?? '08:00' }}">
-                      </div>
-                      <div class="col-6">
-                        <label for="shiftEnd" class="form-label">Jam Pulang</label>
-                        <input type="time" class="form-control" id="shiftEnd" name="shift_end" value="{{ $primaryGeofence->shift_end ?? '17:00' }}">
-                      </div>
+                    <div class="alert alert-dark border border-secondary-subtle p-2.5 rounded-3 mb-4 small text-muted">
+                      <i class="bi bi-info-circle-fill text-primary me-1"></i>
+                      Jam kerja & toleransi keterlambatan diatur otomatis berdasarkan masing-masing <strong>Jadwal & Shift Karyawan</strong> di menu <a href="{{ route('admin.shifts.index') }}" class="text-primary text-decoration-none fw-semibold">Jadwal & Shift Kerja</a>.
                     </div>
 
-                    <div class="mb-4">
-                      <label for="lateTolerance" class="form-label">Toleransi Keterlambatan (Menit)</label>
-                      <input type="number" class="form-control" id="lateTolerance" name="late_tolerance_minutes" value="{{ $primaryGeofence->late_tolerance_minutes ?? 15 }}" min="0">
-                    </div>
-
-                    <button type="submit" class="btn btn-primary w-100">
+                    <button type="submit" class="btn btn-primary w-100 py-2 fw-semibold">
                       <i class="bi bi-save me-1"></i> Simpan Konfigurasi Geofencing
                     </button>
                   </form>

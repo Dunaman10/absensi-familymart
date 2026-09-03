@@ -71,13 +71,15 @@
             </div>
           </div>
 
-          <!-- Quick Banner CTA ke Kamera Presensi -->
+          <!-- Quick Banner CTA ke Kamera Presensi & Informasi Shift -->
           <div class="card border-0 shadow-sm rounded-4 mb-4" style="background: linear-gradient(135deg, rgba(37, 99, 235, 0.15), rgba(16, 185, 129, 0.1)); border: 1px solid rgba(37, 99, 235, 0.3) !important;">
             <div class="card-body p-4 d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
               <div>
-                <span class="badge text-bg-primary mb-2"><i class="bi bi-camera-video me-1"></i> Quick Action</span>
-                <h5 class="fw-bold mb-1">Siap Lakukan Presensi Hari Ini?</h5>
-                <p class="text-muted mb-0 small">Buka menu <strong>Kamera Presensi</strong> untuk melakukan verifikasi biometrik wajah & koordinat geofencing kantor.</p>
+                <div class="d-flex align-items-center gap-2 mb-3">
+                  <span class="badge text-bg-primary py-1.5 px-3 rounded-pill fw-medium"><i class="bi bi-clock-history me-1.5"></i> {{ $geofence['shift_name'] }}</span>
+                </div>
+                <h5 class="fw-bold mb-2 fs-6 fs-md-5">Siap Lakukan Presensi Shift Hari Ini?</h5>
+                <p class="text-muted mb-0 small">Buka menu <strong>Kamera Presensi</strong> untuk melakukan verifikasi biometrik wajah & koordinat geofencing toko <strong>{{ $geofence['office_name'] }}</strong>.</p>
               </div>
               <a href="{{ route('employee.attendance.scan') }}" class="btn btn-primary rounded-3 px-4 py-2.5 fw-semibold shadow-sm flex-shrink-0">
                 <i class="bi bi-camera me-2"></i> Buka Kamera Presensi <i class="bi bi-arrow-right ms-1"></i>

@@ -145,7 +145,10 @@
                     <i class="bi bi-building text-primary fs-5"></i>
                     <div>
                       <h6 class="fw-bold mb-0 text-body" style="font-size: 0.9rem;">{{ $geofence['office_name'] }}</h6>
-                      <small class="text-muted" style="font-size: 0.72rem;"><i class="bi bi-clock me-1"></i>Shift: {{ $geofence['shift_start'] }} - {{ $geofence['shift_end'] }} WIB</small>
+                      <small class="text-muted d-block" style="font-size: 0.72rem;">
+                        <span class="text-primary fw-semibold">{{ $geofence['shift_name'] }}</span>: {{ $geofence['shift_start'] }} - {{ $geofence['shift_end'] }} WIB 
+                        <span class="text-secondary">(Toleransi {{ $geofence['late_tolerance_minutes'] }}m)</span>
+                      </small>
                     </div>
                   </div>
                   <span id="radiusBadge" class="status-pill badge-geofence-in">

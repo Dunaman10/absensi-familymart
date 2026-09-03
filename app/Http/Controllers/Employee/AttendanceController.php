@@ -55,18 +55,17 @@ class AttendanceController extends Controller
         $userShift = $user->shift;
 
         $geofence = [
-            'office_name' => $primaryGeofence->office_name ?? 'Kantor Utama',
+            'office_name' => $primaryGeofence->office_name ?? 'FamilyMart Head Office',
             'office_lat' => $primaryGeofence->lat ?? -6.208800,
             'office_lng' => $primaryGeofence->lng ?? 106.845600,
             'radius_meters' => $primaryGeofence->radius_in_meters ?? 50,
-            'shift_name' => $userShift ? $userShift->name : 'Shift Normal',
-            'shift_start' => $userShift ? substr($userShift->start_time, 0, 5) : ($primaryGeofence->shift_start ?? '08:00'),
-            'shift_end' => $userShift ? substr($userShift->end_time, 0, 5) : ($primaryGeofence->shift_end ?? '17:00'),
+            'shift_name' => $userShift ? $userShift->name : 'Shift Pagi (Family Mart)',
+            'shift_start' => $userShift ? substr($userShift->start_time, 0, 5) : '06:00',
+            'shift_end' => $userShift ? substr($userShift->end_time, 0, 5) : '14:00',
+            'late_tolerance_minutes' => $userShift ? $userShift->late_tolerance_minutes : 15,
         ];
 
-        // Shift Timings & Explicit 12:00 WIB Cutoff Logic
-        $cutoffTime = '12:00:00';
-
+        // Status Tombol Presensi Berdasarkan Siklus Shift 24 Jam
         $canCheckIn = true;
         $canCheckOut = true;
         $checkInDisabledReason = '';
@@ -75,25 +74,18 @@ class AttendanceController extends Controller
         if ($checkOutLog) {
             $canCheckIn = false;
             $canCheckOut = false;
-            $checkInDisabledReason = 'Anda telah menyelesaikan presensi pulang hari ini.';
+            $checkInDisabledReason = 'Anda telah menyelesaikan presensi masuk dan pulang untuk shift hari ini.';
             $checkOutDisabledReason = 'Anda telah menyelesaikan presensi pulang hari ini.';
         } elseif ($checkInLog) {
+            // Sudah absen masuk -> tombol masuk nonaktif, tombol pulang aktif
             $canCheckIn = false;
-            $checkInDisabledReason = 'Anda sudah presensi masuk hari ini.';
+            $checkInDisabledReason = 'Anda sudah presensi masuk hari ini (Pukul '.substr($checkInLog->time, 0, 5).' WIB).';
             $canCheckOut = true;
         } else {
-            // Has not checked in yet today
-            if ($currentTime >= $cutoffTime) {
-                // Past 12:00 WIB: Disable Absen Masuk!
-                $canCheckIn = false;
-                $checkInDisabledReason = 'Waktu presensi masuk telah berakhir (Batas jam 12:00 WIB).';
-                $canCheckOut = true;
-            } else {
-                // Morning Window (< 12:00 WIB): Enable Absen Masuk, Disable Absen Pulang
-                $canCheckIn = true;
-                $canCheckOut = false;
-                $checkOutDisabledReason = 'Presensi pulang dibuka setelah jam 12:00 WIB.';
-            }
+            // Belum absen masuk -> tombol masuk aktif, tombol pulang belum bisa karena belum masuk
+            $canCheckIn = true;
+            $canCheckOut = false;
+            $checkOutDisabledReason = 'Silakan lakukan presensi masuk terlebih dahulu sebelum presensi pulang.';
         }
 
         return view('employee.scan', compact(
@@ -156,47 +148,45 @@ class AttendanceController extends Controller
 
         $userShift = $user->shift;
 
+        // Default ke jam kerja FamilyMart jika karyawan belum memiliki shift khusus
+        $shiftStart = $userShift ? $userShift->start_time : '06:00:00';
+        $shiftEnd = $userShift ? $userShift->end_time : '14:00:00';
+        $toleranceMin = $userShift ? (int) $userShift->late_tolerance_minutes : 15;
+        $isOvernight = $shiftStart > $shiftEnd; // contoh: 22:00:00 > 06:00:00
+
         if ($request->type === 'MASUK') {
-            $shiftStart = $userShift ? $userShift->start_time : ($geofence ? $geofence->shift_start : '08:00:00');
-            $toleranceMin = $userShift ? $userShift->late_tolerance_minutes : ($geofence ? $geofence->late_tolerance_minutes : 15);
             $lateTimeLimit = date('H:i:s', strtotime("{$shiftStart} +{$toleranceMin} minutes"));
 
-            // Jika shift normal (misal 06:00 - 14:00 atau 14:00 - 22:00)
-            // Karyawan dianggap TERLAMBAT jika absen setelah batas waktu toleransi ($lateTimeLimit)
-            // ATAU absen di luar jam kerja shift (misal jam 00:00 - 05:59 untuk shift pagi 06:00)
-            $shiftEnd = $userShift ? $userShift->end_time : '17:00:00';
-            $isOvernight = $shiftStart > $shiftEnd; // e.g. 22:00 - 06:00
-
             if ($isOvernight) {
-                // Shift Malam (misal 22:00 - 06:00)
-                // Terlambat jika absen di antara $lateTimeLimit (22:15) sampai $shiftEnd (06:00)
-                if ($currentTime > $lateTimeLimit || $currentTime < $shiftEnd) {
-                    $status = ($currentTime > $lateTimeLimit && $currentTime <= '23:59:59') || ($currentTime >= '00:00:00' && $currentTime < $shiftEnd) ? 'TERLAMBAT' : 'TEPAT_WAKTU';
+                // Shift Malam (contoh: 22:00 - 06:00, batas telat 22:15)
+                // Karyawan tepat waktu jika masuk antara jam 21:00 sampai 22:15
+                // Terlambat jika absen masuk setelah 22:15 sampai 06:00 pagi berikutnya
+                if ($currentTime > $lateTimeLimit || ($currentTime >= '00:00:00' && $currentTime < $shiftEnd)) {
+                    $status = 'TERLAMBAT';
                 } else {
                     $status = 'TEPAT_WAKTU';
                 }
             } else {
-                // Shift Day (misal Pagi 06:00 - 14:00)
-                // Jika absen jam 00:01 (sebelum jam 06:00) atau setelah jam 06:15 -> TERLAMBAT
-                if ($currentTime > $lateTimeLimit || $currentTime < $shiftStart) {
+                // Shift Reguler Siang/Pagi (contoh: Pagi 06:00 - 14:00, batas telat 06:15)
+                // Terlambat jika absen setelah batas toleransi shift
+                if ($currentTime > $lateTimeLimit) {
                     $status = 'TERLAMBAT';
                 } else {
                     $status = 'TEPAT_WAKTU';
                 }
             }
         } else {
-            $shiftEnd = $userShift ? $userShift->end_time : ($geofence ? $geofence->shift_end : '17:00:00');
-            $shiftStart = $userShift ? $userShift->start_time : '08:00:00';
-            $isOvernight = $shiftStart > $shiftEnd;
-
+            // Tipe: PULANG
             if ($isOvernight) {
-                // Shift Malam (22:00 - 06:00), jam pulang normal adalah jam 06:00 ke atas
-                if ($currentTime < $shiftEnd || $currentTime >= $shiftStart) {
+                // Shift Malam (22:00 - 06:00), jam pulang normal adalah jam 06:00 ke atas sampai shift siang/pagi berikutnya
+                // Pulang cepat jika sebelum jam 06:00 pagi (misal jam 04:00 atau jam 23:00 malam)
+                if ($currentTime >= $shiftStart || $currentTime < $shiftEnd) {
                     $status = 'PULANG_CEPAT';
                 } else {
                     $status = 'TEPAT_WAKTU';
                 }
             } else {
+                // Shift Reguler (contoh: 06:00 - 14:00 atau 14:00 - 22:00)
                 if ($currentTime < $shiftEnd) {
                     $status = 'PULANG_CEPAT';
                 } else {

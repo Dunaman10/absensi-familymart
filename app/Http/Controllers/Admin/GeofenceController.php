@@ -44,9 +44,9 @@ class GeofenceController extends Controller
             'lat' => 'required|numeric',
             'lng' => 'required|numeric',
             'radius_in_meters' => 'required|integer|min:5|max:10000',
-            'shift_start' => 'required|string',
-            'shift_end' => 'required|string',
-            'late_tolerance_minutes' => 'required|integer|min:0',
+            'shift_start' => 'nullable|string',
+            'shift_end' => 'nullable|string',
+            'late_tolerance_minutes' => 'nullable|integer|min:0',
             'is_active' => 'nullable|boolean',
         ]);
 
@@ -62,9 +62,9 @@ class GeofenceController extends Controller
             'lat' => $validated['lat'],
             'lng' => $validated['lng'],
             'radius_in_meters' => $validated['radius_in_meters'],
-            'shift_start' => $validated['shift_start'],
-            'shift_end' => $validated['shift_end'],
-            'late_tolerance_minutes' => $validated['late_tolerance_minutes'],
+            'shift_start' => $validated['shift_start'] ?? null,
+            'shift_end' => $validated['shift_end'] ?? null,
+            'late_tolerance_minutes' => $validated['late_tolerance_minutes'] ?? null,
             'is_active' => $is_active,
         ]);
 
@@ -100,10 +100,10 @@ class GeofenceController extends Controller
         $geofence->lng = $validated['lng'];
         $geofence->radius_in_meters = $validated['radius_in_meters'];
 
-        if (!empty($validated['shift_start'])) {
+        if (! empty($validated['shift_start'])) {
             $geofence->shift_start = $validated['shift_start'];
         }
-        if (!empty($validated['shift_end'])) {
+        if (! empty($validated['shift_end'])) {
             $geofence->shift_end = $validated['shift_end'];
         }
         if (isset($validated['late_tolerance_minutes'])) {
