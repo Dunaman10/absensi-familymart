@@ -233,13 +233,14 @@ class AttendanceController extends Controller
         file_put_contents($fullPath, $photoData);
         $photoPath = 'uploads/attendance_photos/'.$fileName;
 
-        // Save face descriptor if provided by face-api.js
-        if ($request->filled('face_descriptor')) {
-            $user->face_descriptor = $request->face_descriptor;
-        }
-
         // Check if First-Time Biometric Registration (Pending Biometrik)
         $isFirstTimeRegistration = ($user->account_status === 'Pending Biometrik' || empty($user->registered_face_photo));
+
+        // Save/Enroll master face descriptor only during registration or if master template is empty
+        // This prevents daily attendance lighting anomalies or imposters from corrupting the master template
+        if ($request->filled('face_descriptor') && ($isFirstTimeRegistration || empty($user->face_descriptor))) {
+            $user->face_descriptor = $request->face_descriptor;
+        }
 
         if ($isFirstTimeRegistration) {
             $regFileName = 'registered_face_'.time().'_'.$user->id.'.jpg';
@@ -255,8 +256,8 @@ class AttendanceController extends Controller
         } else {
             $user->save();
             $confidenceScore = $request->filled('face_confidence_score')
-                ? (float) $request->face_confidence_score
-                : round(rand(95, 99) + (rand(0, 9) / 10), 1);
+                ? min(100.0, max(0.0, (float) $request->face_confidence_score))
+                : 85.0;
             $message = "Presensi {$request->type} berhasil dicatat dengan verifikasi biometrik {$confidenceScore}% match!";
         }
 

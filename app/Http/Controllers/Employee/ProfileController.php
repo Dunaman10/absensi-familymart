@@ -63,6 +63,8 @@ class ProfileController extends Controller
 
             $file->move($destinationPath, $filename);
             $user->registered_face_photo = 'uploads/avatars/'.$filename;
+            // Invalidate old face descriptor to trigger fresh extraction from new photo
+            $user->face_descriptor = null;
         }
 
         $user->save();
