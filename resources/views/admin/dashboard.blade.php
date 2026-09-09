@@ -109,6 +109,45 @@
             </div>
           </section>
 
+          <!-- Metrik Perizinan Karyawan -->
+          <section class="row g-3 mt-1" aria-label="Leave and permission metrics">
+            <div class="col-12 col-sm-6">
+              <article class="metric-card" style="border-left: 4px solid var(--accent-warning, #f59e0b);">
+                <div class="d-flex justify-content-between align-items-center">
+                  <div>
+                    <span class="metric-label text-warning"><i class="bi bi-clock-history me-1"></i>PERIZINAN PENDING</span>
+                    <div class="metric-value mt-2">{{ $pendingLeaves }}</div>
+                    <div class="metric-meta">
+                      <span class="text-warning fw-semibold">Menunggu review</span>
+                      <span>pengajuan izin, cuti, atau sakit</span>
+                    </div>
+                  </div>
+                  <a href="{{ route('admin.leaves.index', ['status' => 'PENDING']) }}" class="btn btn-sm btn-outline-warning rounded-pill px-3">
+                    Tinjau <i class="bi bi-arrow-right ms-1"></i>
+                  </a>
+                </div>
+              </article>
+            </div>
+
+            <div class="col-12 col-sm-6">
+              <article class="metric-card" style="border-left: 4px solid var(--accent-info, #3b82f6);">
+                <div class="d-flex justify-content-between align-items-center">
+                  <div>
+                    <span class="metric-label text-info"><i class="bi bi-calendar-check me-1"></i>SEDANG CUTI / IZIN HARI INI</span>
+                    <div class="metric-value mt-2">{{ $activeLeavesToday }}</div>
+                    <div class="metric-meta">
+                      <span class="text-info fw-semibold">Izin disetujui</span>
+                      <span>karyawan aktif izin/cuti hari ini</span>
+                    </div>
+                  </div>
+                  <a href="{{ route('admin.leaves.index') }}" class="btn btn-sm btn-outline-info rounded-pill px-3">
+                    Kelola <i class="bi bi-arrow-right ms-1"></i>
+                  </a>
+                </div>
+              </article>
+            </div>
+          </section>
+
           <!-- Panels Row 1: Interactive Leaflet Live Map & Aktivitas Presensi -->
           <section class="row g-3 mt-1">
             <div class="col-12 col-xl-8">
@@ -259,6 +298,87 @@
               </div>
             </div>
             @endif
+          </section>
+
+          <!-- Section: Pengajuan Perizinan Terbaru -->
+          <section class="panel mt-3">
+            <div class="panel-header">
+              <div>
+                <h2 class="h5 mb-1 section-title"><i class="bi bi-calendar2-check text-primary" aria-hidden="true"></i><span>Pengajuan Perizinan Terbaru</span></h2>
+                <p class="text-muted mb-0">Daftar pengajuan izin, cuti, atau sakit karyawan yang masuk ke sistem.</p>
+              </div>
+              <div class="d-flex align-items-center gap-2">
+                <a class="btn btn-outline-primary btn-sm" href="{{ route('admin.leaves.index') }}">
+                  <i class="bi bi-arrow-up-right-square me-1"></i>Kelola Semua Perizinan
+                </a>
+              </div>
+            </div>
+            <div class="table-responsive">
+              <table class="table align-middle mb-0">
+                <thead>
+                  <tr>
+                    <th scope="col">Karyawan</th>
+                    <th scope="col">Tipe</th>
+                    <th scope="col">Rentang Tanggal</th>
+                    <th scope="col">Durasi</th>
+                    <th scope="col">Status</th>
+                    <th scope="col">Aksi</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @forelse($recentLeaveRequests as $leave)
+                  <tr>
+                    <td>
+                      <div class="d-flex align-items-center gap-2">
+                        <img class="avatar-img avatar-sm rounded-circle shadow-sm" src="{{ $leave->user->registered_face_photo ? asset($leave->user->registered_face_photo) : 'https://ui-avatars.com/api/?name='.urlencode($leave->user->name).'&background=0D8ABC&color=fff' }}" alt="{{ $leave->user->name }}">
+                        <div>
+                          <p class="fw-semibold mb-0">{{ $leave->user->name }}</p>
+                          <small class="text-muted">NIP. {{ $leave->user->nip }}</small>
+                        </div>
+                      </div>
+                    </td>
+                    <td>
+                      @if($leave->type === 'CUTI')
+                        <span class="badge text-bg-primary"><i class="bi bi-calendar-event me-1"></i>Cuti</span>
+                      @elseif($leave->type === 'SAKIT')
+                        <span class="badge text-bg-warning text-dark"><i class="bi bi-heart-pulse me-1"></i>Sakit</span>
+                      @else
+                        <span class="badge text-bg-info text-dark"><i class="bi bi-file-earmark-text me-1"></i>Izin</span>
+                      @endif
+                    </td>
+                    <td>
+                      <span class="fw-medium">{{ \Carbon\Carbon::parse($leave->start_date)->translatedFormat('d M Y') }}</span>
+                      @if($leave->start_date != $leave->end_date)
+                        <span class="text-muted">s/d</span>
+                        <span class="fw-medium">{{ \Carbon\Carbon::parse($leave->end_date)->translatedFormat('d M Y') }}</span>
+                      @endif
+                    </td>
+                    <td>
+                      <span class="badge text-bg-secondary">{{ $leave->duration_days }} Hari</span>
+                    </td>
+                    <td>
+                      @if($leave->status === 'APPROVED')
+                        <span class="badge text-bg-success"><i class="bi bi-check-circle me-1"></i>Disetujui</span>
+                      @elseif($leave->status === 'REJECTED')
+                        <span class="badge text-bg-danger"><i class="bi bi-x-circle me-1"></i>Ditolak</span>
+                      @else
+                        <span class="badge text-bg-warning text-dark"><i class="bi bi-hourglass-split me-1"></i>Menunggu</span>
+                      @endif
+                    </td>
+                    <td>
+                      <a href="{{ route('admin.leaves.index', ['search' => $leave->user->nip]) }}" class="btn btn-sm btn-outline-primary rounded-pill px-3">
+                        <i class="bi bi-eye me-1"></i>Lihat
+                      </a>
+                    </td>
+                  </tr>
+                  @empty
+                  <tr>
+                    <td colspan="6" class="text-center text-muted py-4">Belum ada pengajuan perizinan.</td>
+                  </tr>
+                  @endforelse
+                </tbody>
+              </table>
+            </div>
           </section>
         </div>
       </main>

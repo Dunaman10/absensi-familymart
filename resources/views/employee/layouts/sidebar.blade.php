@@ -22,6 +22,10 @@
       <span class="nav-icon"><i class="bi bi-clock-history" aria-hidden="true"></i></span>
       <span class="nav-text">Riwayat Presensi</span>
     </a>
+    <a class="nav-link {{ request()->routeIs('employee.leaves.*') ? 'active' : '' }}" href="{{ route('employee.leaves.index') }}">
+      <span class="nav-icon"><i class="bi bi-file-earmark-text" aria-hidden="true"></i></span>
+      <span class="nav-text">Perizinan</span>
+    </a>
     <a class="nav-link {{ request()->routeIs('employee.profile.index') ? 'active' : '' }}" href="{{ route('employee.profile.index') }}">
       <span class="nav-icon"><i class="bi bi-person-badge" aria-hidden="true"></i></span>
       <span class="nav-text">Profil Saya</span>

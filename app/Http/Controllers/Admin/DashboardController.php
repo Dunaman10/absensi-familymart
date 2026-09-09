@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\AttendanceLog;
 use App\Models\GeofenceSetting;
+use App\Models\LeaveRequest;
 use App\Models\User;
 
 class DashboardController extends Controller
@@ -48,6 +49,14 @@ class DashboardController extends Controller
             ->take(30)
             ->get();
 
+        // Leave & Permission metrics
+        $pendingLeaves = LeaveRequest::pending()->count();
+        $activeLeavesToday = LeaveRequest::activeToday()->count();
+        $recentLeaveRequests = LeaveRequest::with('user')
+            ->latest('created_at')
+            ->take(5)
+            ->get();
+
         return view('admin.dashboard', compact(
             'totalEmployees',
             'presentToday',
@@ -55,7 +64,10 @@ class DashboardController extends Controller
             'outOfRadiusToday',
             'primaryGeofence',
             'recentLogs',
-            'mapLogs'
+            'mapLogs',
+            'pendingLeaves',
+            'activeLeavesToday',
+            'recentLeaveRequests'
         ));
     }
 }

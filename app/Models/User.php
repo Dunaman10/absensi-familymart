@@ -74,6 +74,14 @@ class User extends Authenticatable
     }
 
     /**
+     * Relationship to LeaveRequests.
+     */
+    public function leaveRequests(): HasMany
+    {
+        return $this->hasMany(LeaveRequest::class);
+    }
+
+    /**
      * Check if user is Admin.
      */
     public function isAdmin(): bool

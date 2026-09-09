@@ -4,10 +4,12 @@ use App\Http\Controllers\Admin\AttendanceLogController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\EmployeeController;
 use App\Http\Controllers\Admin\GeofenceController;
+use App\Http\Controllers\Admin\LeaveController as AdminLeaveController;
 use App\Http\Controllers\Admin\ProfileController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Employee\AttendanceController as EmployeeAttendanceController;
 use App\Http\Controllers\Employee\DashboardController as EmployeeDashboardController;
+use App\Http\Controllers\Employee\LeaveController as EmployeeLeaveController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -61,6 +63,12 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role.admin'])->grou
     Route::get('/profile', [ProfileController::class, 'index'])->name('profile.index');
     Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::put('/profile/password', [ProfileController::class, 'updatePassword'])->name('profile.password');
+
+    // Perizinan (Leave Management)
+    Route::get('/leaves', [AdminLeaveController::class, 'index'])->name('leaves.index');
+    Route::post('/leaves/{id}/approve', [AdminLeaveController::class, 'approve'])->name('leaves.approve');
+    Route::post('/leaves/{id}/reject', [AdminLeaveController::class, 'reject'])->name('leaves.reject');
+    Route::put('/leaves/settings', [AdminLeaveController::class, 'updateSettings'])->name('leaves.settings.update');
 });
 
 // Route Employee Workspace (Protected)
@@ -72,6 +80,10 @@ Route::prefix('employee')->name('employee.')->middleware(['auth', 'role.employee
     Route::get('/profile', [App\Http\Controllers\Employee\ProfileController::class, 'index'])->name('profile.index');
     Route::put('/profile', [App\Http\Controllers\Employee\ProfileController::class, 'update'])->name('profile.update');
     Route::put('/profile/password', [App\Http\Controllers\Employee\ProfileController::class, 'updatePassword'])->name('profile.password');
+
+    // Perizinan (Leave Requests)
+    Route::get('/leaves', [EmployeeLeaveController::class, 'index'])->name('leaves.index');
+    Route::post('/leaves', [EmployeeLeaveController::class, 'store'])->name('leaves.store');
 });
 
 // Alias /dashboard redirect based on authenticated user role

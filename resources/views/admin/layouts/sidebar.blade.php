@@ -30,6 +30,10 @@
       <span class="nav-icon"><i class="bi bi-geo-alt" aria-hidden="true"></i></span>
       <span class="nav-text">Geofencing & Lokasi</span>
     </a>
+    <a class="nav-link {{ request()->routeIs('admin.leaves.*') ? 'active' : '' }}" href="{{ route('admin.leaves.index') }}">
+      <span class="nav-icon"><i class="bi bi-file-earmark-text" aria-hidden="true"></i></span>
+      <span class="nav-text">Perizinan</span>
+    </a>
   </nav>
 
   <div class="sidebar-footer">
