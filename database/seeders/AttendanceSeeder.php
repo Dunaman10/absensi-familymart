@@ -10,14 +10,14 @@ use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 use ZipArchive;
 
-class DummyAttendanceSeeder extends Seeder
+class AttendanceSeeder extends Seeder
 {
     /**
      * Run the database seeds for 15 employees attendance trials from XLSX.
      */
     public function run(): void
     {
-        $filePath = database_path('seeders/Data_Dummy_Absensi_15_Karyawan.xlsx');
+        $filePath = database_path('seeders/Data_Absensi_15_Karyawan.xlsx');
 
         if (! file_exists($filePath)) {
             $this->command?->error("File Excel tidak ditemukan pada path: {$filePath}");
@@ -36,7 +36,7 @@ class DummyAttendanceSeeder extends Seeder
         // Header berada di baris pertama
         $dataRows = array_slice($rows, 1);
         $totalRows = count($dataRows);
-        $this->command?->info("Membaca {$totalRows} baris data percobaan dari Data_Dummy_Absensi_15_Karyawan.xlsx...");
+        $this->command?->info("Membaca {$totalRows} baris data percobaan dari Data_Absensi_15_Karyawan.xlsx...");
 
         $admin = User::where('role', 'admin')->first();
         $geofence = GeofenceSetting::where('is_active', true)->first() ?? GeofenceSetting::first();
@@ -82,7 +82,7 @@ class DummyAttendanceSeeder extends Seeder
                 $user = User::create([
                     'nip' => $nip,
                     'name' => $namaKaryawan,
-                    'email' => strtolower(str_replace(' ', '', $nip)).'@absensiku.com',
+                    'email' => strtolower(str_replace(' ', '', $nip)) . '@absensiku.com',
                     'position' => 'Store Crew',
                     'password' => Hash::make('password'),
                     'role' => 'user',
@@ -165,7 +165,7 @@ class DummyAttendanceSeeder extends Seeder
                     'face_confidence_score' => $skorWajah,
                     'photo_path' => $photoPath,
                     'notes' => $notes,
-                    'ip_address' => '192.168.1.'.(10 + $idKaryawan),
+                    'ip_address' => '192.168.1.' . (10 + $idKaryawan),
                     'user_agent' => 'Mozilla/5.0 (Linux; Android 14; Mobile) AppleWebKit/537.36 Chrome/128.0.0.0 Mobile Safari/537.36',
                 ]
             );
