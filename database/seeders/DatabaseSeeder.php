@@ -16,7 +16,7 @@ class DatabaseSeeder extends Seeder
             UserSeeder::class,
             GeofenceSettingSeeder::class,
             AttendanceLogSeeder::class,
-            DummyAttendanceSeeder::class,
+            AttendanceSeeder::class,
             LeaveSettingSeeder::class,
             LeaveRequestSeeder::class,
         ]);

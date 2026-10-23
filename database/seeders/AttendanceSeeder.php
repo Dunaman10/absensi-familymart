@@ -82,7 +82,7 @@ class AttendanceSeeder extends Seeder
                 $user = User::create([
                     'nip' => $nip,
                     'name' => $namaKaryawan,
-                    'email' => strtolower(str_replace(' ', '', $nip)) . '@absensiku.com',
+                    'email' => strtolower(str_replace(' ', '', $nip)).'@absensiku.com',
                     'position' => 'Store Crew',
                     'password' => Hash::make('password'),
                     'role' => 'user',
@@ -137,10 +137,17 @@ class AttendanceSeeder extends Seeder
             }
 
             // Path avatar foto presensi
-            $avatarNum = (($idKaryawan - 1) % 21) + 1;
-            $photoPath = file_exists(public_path("assets/images/avatar/avatar-{$avatarNum}.jpg"))
-                ? "assets/images/avatar/avatar-{$avatarNum}.jpg"
-                : 'assets/images/avatar/avatar-fallback.jpg';
+            if (str_contains($skenario, 'BEDA')) {
+                $otherNum = (($idKaryawan + 5) % 21) + 1;
+                $photoPath = file_exists(public_path("assets/images/avatar/avatar-{$otherNum}.jpg"))
+                    ? "assets/images/avatar/avatar-{$otherNum}.jpg"
+                    : 'assets/images/avatar/avatar-fallback.jpg';
+            } else {
+                $avatarNum = (($idKaryawan - 1) % 21) + 1;
+                $photoPath = file_exists(public_path("assets/images/avatar/avatar-{$avatarNum}.jpg"))
+                    ? "assets/images/avatar/avatar-{$avatarNum}.jpg"
+                    : 'assets/images/avatar/avatar-fallback.jpg';
+            }
 
             $notes = "Percobaan #{$percobaan} [{$skenario}] | Verifikasi: {$statusVerifikasi} | Euclidean: {$jarakEuclidean} | Jarak: {$distanceFromOffice}m | Status: {$statusKehadiran}";
 
@@ -165,7 +172,7 @@ class AttendanceSeeder extends Seeder
                     'face_confidence_score' => $skorWajah,
                     'photo_path' => $photoPath,
                     'notes' => $notes,
-                    'ip_address' => '192.168.1.' . (10 + $idKaryawan),
+                    'ip_address' => '192.168.1.'.(10 + $idKaryawan),
                     'user_agent' => 'Mozilla/5.0 (Linux; Android 14; Mobile) AppleWebKit/537.36 Chrome/128.0.0.0 Mobile Safari/537.36',
                 ]
             );
